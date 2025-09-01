@@ -14,17 +14,16 @@ type ItemsBagPackProps = {
 
 const ItemsBagPack = ({ initialData, onSave, onClose, isSaving }: ItemsBagPackProps) => {
     const [isLoading, setIsLoading] = useState(true);
-    // Estado para guardar o ID do documento da mochila
+    
     const [bagpackDocId, setBagpackDocId] = useState<string | null>(null);
-
-    // Estados para os campos do formulário
-    const [platina, setPlatina] = useState('0');
-    const [gold, setGold] = useState('0');
-    const [silver, setSilver] = useState('0');
-    const [copper, setCopper] = useState('0');
+    const [platina, setPlatina] = useState(0);
+    const [gold, setGold] = useState(0);
+    const [silver, setSilver] = useState(0);
+    const [electrum, setElectrum] = useState(0);
+    const [armor, setArmor] = useState(0);
+    const [copper, setCopper] = useState(0);
     const [items, setItems] = useState('');
 
-    // 2. BUSCAR OS DADOS DA MOCHILA NA SUBCOLEÇÃO
     useEffect(() => {
         if (!initialData?.id) return;
 
@@ -32,20 +31,21 @@ const ItemsBagPack = ({ initialData, onSave, onClose, isSaving }: ItemsBagPackPr
             .collection('characterSheets')
             .doc(initialData.id)
             .collection('bagpack')
-            .limit(1); // Pegamos apenas o primeiro (e único) documento da mochila
+            .limit(1);
 
         const subscriber = bagpackQuery.onSnapshot(querySnapshot => {
             if (!querySnapshot.empty) {
                 const bagpackDoc = querySnapshot.docs[0];
                 const data = bagpackDoc.data();
-                setBagpackDocId(bagpackDoc.id); // Guardamos o ID do doc da mochila
+                setBagpackDocId(bagpackDoc.id);
 
-                // Preenchemos os estados do formulário
-                setPlatina(String(data.platina || '0'));
-                setGold(String(data.gold || '0'));
-                setSilver(String(data.silver || '0'));
-                setCopper(String(data.copper || '0'));
+                setPlatina(data.platina || 0);
+                setGold(data.gold || 0);
+                setSilver(data.silver || 0);
+                setElectrum(data.electrum || 0);
+                setCopper(data.copper || 0);
                 setItems(data.items || '');
+                setArmor(data.armor || 0);
             }
             setIsLoading(false);
         }, error => {
@@ -57,13 +57,15 @@ const ItemsBagPack = ({ initialData, onSave, onClose, isSaving }: ItemsBagPackPr
     }, [initialData]);
 
     const handleSave = () => {
-        if (!bagpackDocId) return; // Não salva se não tiver o ID da mochila
+        if (!bagpackDocId) return;
 
         const dataToSave = {
-            platina: parseInt(platina, 10) || 0,
-            gold: parseInt(gold, 10) || 0,
-            silver: parseInt(silver, 10) || 0,
-            copper: parseInt(copper, 10) || 0,
+            platina: platina || 0,
+            gold: gold || 0,
+            silver: silver || 0,
+            copper: copper || 0,
+            electrum: electrum || 0,
+            armor: armor || 0,
             items: items || '',
         };
         // 3. PASSA O ID DA MOCHILA DE VOLTA
@@ -79,67 +81,73 @@ const ItemsBagPack = ({ initialData, onSave, onClose, isSaving }: ItemsBagPackPr
     return (
         <View style={styles.formContainer}>
             <Text style={styles.formTitle}>Mochila de {initialData?.characterName}</Text>
-
-            {/* --- ESTRUTURA JSX CORRIGIDA --- */}
-
-            {/* Linha para Platina e Ouro */}
             <View style={styles.row}>
-                {/* Campo 1: Platina */}
                 <View style={styles.fieldContainer}>
                     <Text style={styles.label}>Platina</Text>
                     <TextInput
                         style={styles.currencyInput}
-                        value={platina}
-                        onChangeText={setPlatina}
+                        value={platina.toString()} 
+                        onChangeText={(text) =>setPlatina(Number(text))}
                         keyboardType="numeric"
                     />
                 </View>
-
-                {/* Campo 2: Ouro */}
                 <View style={styles.fieldContainer}>
                     <Text style={styles.label}>Ouro</Text>
                     <TextInput
                         style={styles.currencyInput}
-                        value={gold}
-                        onChangeText={setGold}
+                        value={gold.toString()}
+                        onChangeText={(text) =>setGold(Number(text))}
                         keyboardType="numeric"
                     />
                 </View>
             </View>
-
-            {/* Linha para Prata e Bronze */}
             <View style={styles.row}>
-                {/* Campo 3: Prata */}
                 <View style={styles.fieldContainer}>
                     <Text style={styles.label}>Prata</Text>
                     <TextInput
                         style={styles.currencyInput}
-                        value={silver}
-                        onChangeText={setSilver}
+                        value={silver.toString()}
+                        onChangeText={(text) =>setSilver(Number(text))}
                         keyboardType="numeric"
                     />
                 </View>
-
-                {/* Campo 4: Bronze */}
                 <View style={styles.fieldContainer}>
-                    <Text style={styles.label}>Bronze</Text>
+                    <Text style={styles.label}>Electrum</Text>
                     <TextInput
                         style={styles.currencyInput}
-                        value={copper}
-                        onChangeText={setCopper}
+                        value={electrum.toString()}
+                        onChangeText={(text) =>setElectrum(Number(text))}
                         keyboardType="numeric"
                     />
                 </View>
             </View>
-
-            {/* Campo de Itens (ocupando a largura toda) */}
+            <View style={styles.row}>
+                <View style={styles.fieldContainer}>
+                    <Text style={styles.label}>Bronze</Text>
+                    <TextInput
+                        style={styles.currencyInput}
+                        value={copper.toString()}
+                        onChangeText={(text) =>setCopper(Number(text))}
+                        keyboardType="numeric"
+                    />
+                </View>
+                <View style={styles.fieldContainer}>
+                    <Text style={styles.label}>Classe de Armadura</Text>
+                    <TextInput
+                        style={styles.currencyInput}
+                        value={armor.toString()}
+                        onChangeText={(text) =>setArmor(Number(text))}
+                        keyboardType="numeric"
+                    />
+                </View>
+            </View>
             <Text style={styles.label}>Itens</Text>
             <TextInput
                 style={styles.itemsInput}
                 value={items}
                 onChangeText={setItems}
-                multiline={true} // Permite múltiplas linhas
-                numberOfLines={4} // Altura inicial
+                multiline={true}
+                numberOfLines={4}
             />
 
             <View style={styles.formButtons}>

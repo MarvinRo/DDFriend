@@ -7,9 +7,7 @@ import {
     StyleSheet,
     Alert,
     ActivityIndicator,
-    FlatList,
-    Modal,
-    Button,
+    FlatList
 } from 'react-native';
 import NaviBar from '../../components/NaviBar';
 import { GlobalStyles } from '../../styles/GlobalStyles';
@@ -21,32 +19,28 @@ import CharacterSheetForm from '../../components/CharacterSheetForm'
 import LevelEditForm from '../../components/LevelEditForm';
 import ItemsBagPack from '../../components/ItemsBagPack';
 import SpellsAndAbilitiesForm from '../../components/SpellsAndAbilitiesForm';
+import ViewSheet from '../../components/ViewSheet';
 
 
 const CharacterSheetScreen = ({ navigation }: any) => {
     const [isFormVisible, setIsFormVisible] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [sheets, setSheets] = useState([]);
+    const [ownerName, setOwnerName] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [selectedSheet, setSelectedSheet] = useState(null);
     const [editingSheet, setEditingSheet] = useState(null);
     const [isLevelFormVisible, setIsLevelFormVisible] = useState(false);
     const [sheetForLevelEdit, setSheetForLevelEdit] = useState(null);
     const [isItemsBackPackFormVisible, setIsItemsBackPackvFormVisible] = useState(false);
-    const [itemsBackPack, setItemsBackPack] = useState(null)
+    /* const [itemsBackPack, setItemsBackPack] = useState(null) */
     const [isSpellsFormVisible, setIsSpellsFormVisible] = useState(false);
-    const [sheetForSpellsEdit, setSheetForSpellsEdit] = useState<CharacterSheet | null>(null);
+    const [viewSheet, setViewSheet] = useState(false);
+    const [viewSheetVisible, setViewSheetVisible] = useState(null)
+    const [sheetForBag, setSheetForBag] = useState(null);
+    const [bagDataForView, setBagDataForView] = useState(null);
 
-    const openSheetModal = (sheet: React.SetStateAction<null>) => {
-        setSelectedSheet(sheet);
-        setIsModalVisible(true);
-    };
+    const [sheetForSpellsEdit, setSheetForSpellsEdit] = useState<CharacterSheetForm | null>(null);
 
-    const closeSheetModal = () => {
-        setIsModalVisible(false);
-        setSelectedSheet(null);
-    };
 
     const handleOpenEditForm = (sheet: React.SetStateAction<null>) => {
         setEditingSheet(sheet);
@@ -59,13 +53,51 @@ const CharacterSheetScreen = ({ navigation }: any) => {
     };
 
     const handleOpenItemsBackPackForm = (sheet: React.SetStateAction<null>) => {
-        setItemsBackPack(sheet);
+        setSheetForBag(sheet);
         setIsItemsBackPackvFormVisible(true);
     };
 
     const handleOpenSpellsForm = (sheet: React.SetStateAction<null>) => {
         setSheetForSpellsEdit(sheet);
         setIsSpellsFormVisible(true);
+    };
+    /* const handleOpensetViewSheet = (sheet: React.SetStateAction<null>) => {
+        setViewSheet(true);
+        setViewSheetVisible(sheet);
+    }; */
+    const handleOpensetViewSheet = async (sheet: any) => {
+        try {
+            // Mostra um loading enquanto busca os dados da mochila
+            setIsLoading(true);
+
+            // Busca os dados da subcoleção 'bagpack'
+            const bagpackQuery = await firestore()
+                .collection('characterSheets')
+                .doc(sheet.id)
+                .collection('bagpack')
+                .limit(1)
+                .get();
+
+            if (!bagpackQuery.empty) {
+                const bagData = bagpackQuery.docs[0].data();
+                console.log("DADOS DA MOCHILA ENCONTRADOS:", bagData);
+                setBagDataForView(bagData); // Armazena os dados da mochila no novo estado
+            } else {
+                // Se não encontrar, define como um objeto vazio para não dar erro
+                setBagDataForView({});
+            }
+
+            // Agora que temos os dados, podemos abrir a ficha
+            setViewSheetVisible(sheet);
+            setViewSheet(true);
+
+        } catch (error) {
+            console.error("Erro ao buscar dados da mochila para visualização:", error);
+            Alert.alert("Erro", "Não foi possível carregar os dados da mochila.");
+        } finally {
+            // Para de mostrar o loading, independentemente do resultado
+            setIsLoading(false);
+        }
     };
 
     const handleCloseForms = () => {
@@ -74,9 +106,11 @@ const CharacterSheetScreen = ({ navigation }: any) => {
         setIsItemsBackPackvFormVisible(false);
         setEditingSheet(null);
         setSheetForLevelEdit(null);
-        setItemsBackPack(null);
+        setSheetForBag(null);
         setIsSpellsFormVisible(false);
         setSheetForSpellsEdit(null);
+        setViewSheet(false);
+        setViewSheetVisible(null);
     };
     useEffect(() => {
         const user = auth().currentUser;
@@ -85,6 +119,7 @@ const CharacterSheetScreen = ({ navigation }: any) => {
             return;
         }
 
+        setOwnerName(user)
         const subscriber = firestore()
             .collection('characterSheets')
             .where('ownerId', '==', user.uid)
@@ -124,7 +159,6 @@ const CharacterSheetScreen = ({ navigation }: any) => {
                                 const snapshot = await subcollectionRef.get();
 
                                 if (snapshot.empty) {
-                                    console.log(`Subcoleção ${subcollectionName} está vazia ou não existe.`);
                                     return;
                                 }
                                 const batch = firestore().batch();
@@ -132,14 +166,12 @@ const CharacterSheetScreen = ({ navigation }: any) => {
                                     batch.delete(doc.ref);
                                 });
                                 await batch.commit();
-                                console.log(`Subcoleção ${subcollectionName} apagada com sucesso.`);
                             };
                             await Promise.all([
                                 deleteSubcollection('bagpack'),
                                 deleteSubcollection('spellsAndAbilities')
                             ]);
                             await sheetRef.delete();
-                            console.log(`Documento principal ${sheetId} apagado com sucesso.`);
 
                             Alert.alert("Sucesso!", "Ficha e todos os dados relacionados foram apagados.");
 
@@ -175,11 +207,13 @@ const CharacterSheetScreen = ({ navigation }: any) => {
                     platina: 0,
                     gold: 0,
                     silver: 0,
+                    electrum: 0,
                     copper: 0,
+                    armor: 0,
                     items: ''
                 })
                 await newSheetRef.collection('spellsAndAbilities').add({
-                    talents:'',
+                    talents: '',
                     abilities: '',
                     spells: '',
                 });
@@ -214,13 +248,13 @@ const CharacterSheetScreen = ({ navigation }: any) => {
     };
 
     const handleUpdateItemsBackPack = async (bagpackData: any, bagpackDocId: string) => {
-        if (!itemsBackPack || !bagpackDocId) return;
+        if (!sheetForBag || !bagpackDocId) return;
 
         setIsSaving(true);
         try {
             const itemsBackPackRef = firestore()
                 .collection('characterSheets')
-                .doc(itemsBackPack.id)
+                .doc(sheetForBag.id)
                 .collection('bagpack')
                 .doc(bagpackDocId);
 
@@ -277,7 +311,7 @@ const CharacterSheetScreen = ({ navigation }: any) => {
                 <ItemsBagPack
                     onSave={handleUpdateItemsBackPack}
                     isSaving={isSaving}
-                    initialData={itemsBackPack}
+                    initialData={sheetForBag}
                     onClose={handleCloseForms}
                 />
             );
@@ -300,6 +334,26 @@ const CharacterSheetScreen = ({ navigation }: any) => {
                 />
             );
         }
+        /* else if (viewSheet) {
+            return (
+                <ViewSheet
+                    initialData={viewSheetVisible}
+                    userInfo={ownerName}
+                    initialBag={itemsBackPack}
+                    onClose={handleCloseForms}
+                />
+            );
+        } */
+        else if (viewSheet) {
+            return (
+                <ViewSheet
+                    initialData={viewSheetVisible}
+                    userInfo={ownerName}
+                    initialBag={bagDataForView} // <<-- CORRIGIDO
+                    onClose={handleCloseForms}
+                />
+            );
+        }
 
         return (
             <View style={styles.listContainer}>
@@ -315,7 +369,7 @@ const CharacterSheetScreen = ({ navigation }: any) => {
                                 level={item.level}
                                 race={item.characterRace}
                                 characterClass={item.characterClass}
-                                onPress={() => openSheetModal(item)}
+                                onPress={() => handleOpensetViewSheet(item)}
                                 onEdit={() => handleOpenEditForm(item)}
                                 onDelete={() => handleDeleteSheet(item.id)}
                                 onPressLevel={() => handleOpenLevelForm(item)}
@@ -333,26 +387,6 @@ const CharacterSheetScreen = ({ navigation }: any) => {
                     <TouchableOpacity onPress={() => setIsFormVisible(true)} style={styles.newSheetButton}>
                         <Text style={styles.newSheetButtonText}>+ Nova Ficha</Text>
                     </TouchableOpacity>
-                    <Modal
-                        animationType="slide"
-                        transparent={true}
-                        visible={isModalVisible}
-                        onRequestClose={closeSheetModal}
-                    >
-                        <View style={styles.modalOverlay}>
-                            <View style={styles.modalContent}>
-                                <View style={{ justifyContent: "space-between", flexDirection: "row", width: 100 }}>
-                                    <Text style={styles.modalTitle}>{selectedSheet?.characterName}</Text>
-                                    <Text style={styles.modalTitle}>Lv.{selectedSheet?.level}</Text>
-                                </View>
-                                <Text style={styles.modalDetail}>Raça: {selectedSheet?.characterRace}</Text>
-                                <Text style={styles.modalDetail}>Classe: {selectedSheet?.characterClass}</Text>
-                                <Text style={styles.modalDetail}>Tendência: {selectedSheet?.characterTrend}</Text>
-
-                                <Button title="Fechar" onPress={closeSheetModal} />
-                            </View>
-                        </View>
-                    </Modal>
                 </View>
             </View>
         );

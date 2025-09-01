@@ -21,7 +21,6 @@ const LevelEditForm = ({ initialData, onSave, onClose, isSaving }: LevelEditForm
     const [experience, setExperience] = useState('0');
 
     useEffect(() => {
-        console.log(initialData);
         if (initialData) {
             setLevel(String(initialData.level || '1'));
             setExperience(String(initialData.experience || '0'));

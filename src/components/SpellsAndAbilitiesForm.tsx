@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 
 type SpellsFormProps = {
@@ -63,49 +63,63 @@ const SpellsAndAbilitiesForm = ({ initialData, onSave, onClose, isSaving }: Spel
     }
 
     return (
-        <View style={styles.formContainer}>
-            <Text style={styles.formTitle}>Magias e Habilidades</Text>
-            <Text style={styles.characterName}>{initialData?.characterName}</Text>
-            
-            <Text style={styles.label}>Talentos</Text>
-            <TextInput
-                style={styles.textArea}
-                value={talents}
-                onChangeText={setTalents}
-                multiline
-                numberOfLines={6}
-            />
-            <Text style={styles.label}>Habilidades</Text>
-            <TextInput
-                style={styles.textArea}
-                value={abilities}
-                onChangeText={setAbilities}
-                multiline
-                numberOfLines={6}
-            />
+        <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.keyboardAvoidingContainer}
+        >
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
+            <View style={styles.formContainer}>
+                <Text style={styles.formTitle}>Magias e Habilidades</Text>
+                <Text style={styles.characterName}>{initialData?.characterName}</Text>
 
-            <Text style={styles.label}>Magias Conhecidas</Text>
-            <TextInput
-                style={styles.textArea}
-                value={spells}
-                onChangeText={setSpells}
-                multiline
-                numberOfLines={6}
-            />
-
-            <View style={styles.formButtons}>
-                <Button title="Cancelar" onPress={onClose} color="#f44336" />
-                <Button
-                    title={isSaving ? "Salvando..." : "Salvar"}
-                    onPress={handleSave}
-                    disabled={isSaving || isLoading}
+                <Text style={styles.label}>Talentos</Text>
+                <TextInput
+                    style={styles.textArea}
+                    value={talents}
+                    onChangeText={setTalents}
+                    multiline
+                    numberOfLines={6}
                 />
+                <Text style={styles.label}>Habilidades</Text>
+                <TextInput
+                    style={styles.textArea}
+                    value={abilities}
+                    onChangeText={setAbilities}
+                    multiline
+                    numberOfLines={6}
+                />
+
+                <Text style={styles.label}>Magias Conhecidas</Text>
+                <TextInput
+                    style={styles.textArea}
+                    value={spells}
+                    onChangeText={setSpells}
+                    multiline
+                    numberOfLines={6}
+                />
+
+                <View style={styles.formButtons}>
+                    <Button title="Cancelar" onPress={onClose} color="#f44336" />
+                    <Button
+                        title={isSaving ? "Salvando..." : "Salvar"}
+                        onPress={handleSave}
+                        disabled={isSaving || isLoading}
+                    />
+                </View>
             </View>
-        </View>
+        </ScrollView>
+        </KeyboardAvoidingView >
     );
 };
 
 const styles = StyleSheet.create({
+    keyboardAvoidingContainer: {
+        flex: 1, // Garante que o container ocupe todo o espaço disponível
+    },
+    scrollContainer: {
+        flexGrow: 1, // Permite que o conteúdo cresça
+        justifyContent: 'center', // Centraliza o formulário verticalmente
+    },
     formContainer: { width: "90%", backgroundColor: '#2a2a2a', borderRadius: 10, padding: 20, alignSelf: 'center' },
     formTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff', marginBottom: 5, textAlign: 'center' },
     characterName: { fontSize: 16, color: '#ccc', textAlign: 'center', marginBottom: 20 },

@@ -25,10 +25,7 @@ type CharacterCardProps = {
 
 const CharacterCard = ({ name, race, characterClass, level, onPress, onDelete, onEdit, onPressLevel, onPressBagItens, onPressSpells }: CharacterCardProps) => (
     <View style={CharacterCardStyle.card}>
-        {/* Container principal do conteúdo */}
         <View style={CharacterCardStyle.cardBody}>
-
-            {/* Coluna de Informações (flexível) */}
             <TouchableOpacity style={CharacterCardStyle.infoColumn} onPress={onPress}>
                 <Text style={CharacterCardStyle.cardTextName}>{name}</Text>
                 {(race || characterClass) && (
@@ -38,7 +35,6 @@ const CharacterCard = ({ name, race, characterClass, level, onPress, onDelete, o
                 )}
             </TouchableOpacity>
 
-            {/* Coluna de Ações (fixa) */}
             <View style={CharacterCardStyle.actionsColumn}>
                 <TouchableOpacity onPress={onPressLevel}>
                     <Text style={CharacterCardStyle.cardTextLevel}>Lv.{level}</Text>
