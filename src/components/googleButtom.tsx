@@ -8,12 +8,18 @@ import {
 import { SvgUri } from 'react-native-svg';
 import "../styles/LoginStyles"
 import { styles } from '../styles/LoginStyles';
-import { GOOGLE_WEB_CLIENT_ID } from '@env';
+import { NativeModules } from 'react-native';
+const { GOOGLE_WEB_CLIENT_ID } = NativeModules.EnvModule;
+
+console.log(GOOGLE_WEB_CLIENT_ID);
+
 
 GoogleSignin.configure({
   webClientId: GOOGLE_WEB_CLIENT_ID,
   offlineAccess: true,
 });
+
+
 const GoogleIcon = () => (
   <SvgUri
     width="24"

@@ -22,14 +22,6 @@
           }
         },
         {
-          "client_id": "66691681860-a5ij1g740gh9pbagdvcdu0tf2kjmrlnf.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.ddfriends",
-            "certificate_hash": "58fee074fc35fb6df8e2974a351baf4fcdc7d0eb"
-          }
-        },
-        {
           "client_id": "66691681860-8thlo73c3mqir97f9s55dvkoo4q5flhd.apps.googleusercontent.com",
           "client_type": 3
         }
