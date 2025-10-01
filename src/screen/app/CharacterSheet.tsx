@@ -32,7 +32,6 @@ const CharacterSheetScreen = ({ navigation }: any) => {
     const [isLevelFormVisible, setIsLevelFormVisible] = useState(false);
     const [sheetForLevelEdit, setSheetForLevelEdit] = useState(null);
     const [isItemsBackPackFormVisible, setIsItemsBackPackvFormVisible] = useState(false);
-    /* const [itemsBackPack, setItemsBackPack] = useState(null) */
     const [isSpellsFormVisible, setIsSpellsFormVisible] = useState(false);
     const [viewSheet, setViewSheet] = useState(false);
     const [viewSheetVisible, setViewSheetVisible] = useState(null)
@@ -394,13 +393,13 @@ const CharacterSheetScreen = ({ navigation }: any) => {
 
     return (
         <View style={GlobalStyles.container}>
-            <SafeAreaView style={{ marginBottom: 40 }}>
+            <SafeAreaView style={{ marginBottom: 20 }}>
                 <NaviBar
                     onMenuPress={() => navigation.openDrawer()}
                     onLogoutPress={async () => await auth().signOut()}
                 />
             </SafeAreaView>
-            <View style={GlobalStyles.container}>
+            <View>
                 {renderContent()}
             </View>
         </View>

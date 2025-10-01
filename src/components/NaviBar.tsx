@@ -20,7 +20,6 @@ const NaviBar = () => {
   };
 
   return (
-    <View style={GlobalStyles.container}>
       <View style={NaviBarStyles.navibar}>
         <TouchableOpacity onPress={handleMenuPress}>
           <SvgXml style={NaviBarStyles.Icon} xml={menuIconXml} />
@@ -32,7 +31,6 @@ const NaviBar = () => {
         <View />
       )}
       </View>
-    </View>
   );
 };
 export default NaviBar;

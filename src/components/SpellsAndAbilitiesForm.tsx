@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
-
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'; // 1. Importar
 type SpellsFormProps = {
     initialData: { id: string; characterName: string; };
     onSave: (data: any, docId: string) => void;
@@ -67,58 +67,64 @@ const SpellsAndAbilitiesForm = ({ initialData, onSave, onClose, isSaving }: Spel
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={styles.keyboardAvoidingContainer}
         >
+            {/* 2. ScrollView permite a rolagem e centraliza o conteúdo */}
             <ScrollView contentContainerStyle={styles.scrollContainer}>
-            <View style={styles.formContainer}>
-                <Text style={styles.formTitle}>Magias e Habilidades</Text>
-                <Text style={styles.characterName}>{initialData?.characterName}</Text>
+                {/* 3. Esta View é o seu "cartão" de formulário com o estilo visual */}
+                <View style={styles.formContainer}>
+                    <Text style={styles.formTitle}>Magias e Habilidades</Text>
+                    <Text style={styles.characterName}>{initialData?.characterName}</Text>
 
-                <Text style={styles.label}>Talentos</Text>
-                <TextInput
-                    style={styles.textArea}
-                    value={talents}
-                    onChangeText={setTalents}
-                    multiline
-                    numberOfLines={6}
-                />
-                <Text style={styles.label}>Habilidades</Text>
-                <TextInput
-                    style={styles.textArea}
-                    value={abilities}
-                    onChangeText={setAbilities}
-                    multiline
-                    numberOfLines={6}
-                />
-
-                <Text style={styles.label}>Magias Conhecidas</Text>
-                <TextInput
-                    style={styles.textArea}
-                    value={spells}
-                    onChangeText={setSpells}
-                    multiline
-                    numberOfLines={6}
-                />
-
-                <View style={styles.formButtons}>
-                    <Button title="Cancelar" onPress={onClose} color="#f44336" />
-                    <Button
-                        title={isSaving ? "Salvando..." : "Salvar"}
-                        onPress={handleSave}
-                        disabled={isSaving || isLoading}
+                    <Text style={styles.label}>Talentos</Text>
+                    <TextInput
+                        style={styles.textArea}
+                        value={talents}
+                        onChangeText={setTalents}
+                        multiline
+                        numberOfLines={6}
                     />
+                    <Text style={styles.label}>Habilidades</Text>
+                    <TextInput
+                        style={styles.textArea}
+                        value={abilities}
+                        onChangeText={setAbilities}
+                        multiline
+                        numberOfLines={6}
+                    />
+
+                    <Text style={styles.label}>Magias Conhecidas</Text>
+                    <TextInput
+                        style={styles.textArea}
+                        value={spells}
+                        onChangeText={setSpells}
+                        multiline
+                        numberOfLines={6}
+                    />
+
+                    <View style={styles.formButtons}>
+                        <Button title="Cancelar" onPress={onClose} color="#f44336" />
+                        <Button
+                            title={isSaving ? "Salvando..." : "Salvar"}
+                            onPress={handleSave}
+                            disabled={isSaving || isLoading}
+                        />
+                    </View>
                 </View>
-            </View>
-        </ScrollView>
-        </KeyboardAvoidingView >
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 };
 
 const styles = StyleSheet.create({
     keyboardAvoidingContainer: {
-        flex: 1, // Garante que o container ocupe todo o espaço disponível
+        width: "90%",
+        backgroundColor: '#2a2a2a',
+        borderRadius: 10,
+        padding: 20,
+        alignSelf: 'center',
     },
     scrollContainer: {
-        flexGrow: 1, // Permite que o conteúdo cresça
-        justifyContent: 'center', // Centraliza o formulário verticalmente
+        flexGrow: 1,
+        justifyContent: 'center',
     },
     formContainer: { width: "90%", backgroundColor: '#2a2a2a', borderRadius: 10, padding: 20, alignSelf: 'center' },
     formTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff', marginBottom: 5, textAlign: 'center' },

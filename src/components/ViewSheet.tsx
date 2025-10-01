@@ -367,7 +367,7 @@ const ViewSheet = ({ onClose, initialData, initialBag, userInfo }: ViewSheetProp
                 <View style={[styles.infoContainer, { top: '16%', left: '37%' }]}>
                     <Text style={styles.status}>{initialBag.armor}</Text>
                 </View>
-                <View style={[styles.infoContainer, { top: '88.5%', left: '38.5%' }]}>
+                <View style={[styles.infoContainer, { top: '88.5%', left: '37.5%' }]}>
                     <Text style={styles.modifier}>{initialBag.platina}</Text>
                 </View>
                 <View style={[styles.infoContainer, { top: '85%', left: '37.5%' }]}>
@@ -461,7 +461,10 @@ const styles = StyleSheet.create({
     itemsBag: {
         fontSize: 6,
         color: '#000',
-        width:"30%"
+        width:"100%",
+        maxWidth:70,
+        height:"auto",
+        maxHeight:100,
     },
     modifierStatus: {
         fontSize: 13,

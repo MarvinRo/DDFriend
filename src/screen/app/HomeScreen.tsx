@@ -14,7 +14,7 @@ const HomeScreen = () => {
       <View style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", }}>
         <View style={{ height: 150, justifyContent: "space-between" }}>
           <Text style={{ fontSize: 40, color: "#fff" }}>Bem vindo </Text>
-          <Text style={{ fontSize: 20, color: "#fff" }}>asdfdsafdsafdsafdsa </Text>
+          <Text style={{ fontSize: 20, color: "#fff" }}>Este aplicativo esta sendo criado para ajudar e facilitar os jogadores em suas fichas. </Text>
         </View>
       </View>
     </View>

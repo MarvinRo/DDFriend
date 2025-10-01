@@ -12,11 +12,12 @@ import CustomDrawer from './CustomDrawer';
 import { SvgXml } from 'react-native-svg';
 import { MenuStyle } from '../styles/MenuStyle';
 import CharacterSheet from '../screen/app/CharacterSheet';
+import Books from '../screen/app/Books';
 
 
 const CharacterSheetIconXml =`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-user-icon lucide-file-user"><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M15 18a3 3 0 1 0-6 0"/><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><circle cx="12" cy="13" r="2"/></svg>`
 const HomeIconXml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-castle-icon lucide-castle"><path d="M10 5V3"/><path d="M14 5V3"/><path d="M15 21v-3a3 3 0 0 0-6 0v3"/><path d="M18 3v8"/><path d="M18 5H6"/><path d="M22 11H2"/><path d="M22 9v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9"/><path d="M6 3v8"/></svg>`;
-
+const BooksXml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-open-text-icon lucide-book-open-text"><path d="M12 7v14"/><path d="M16 12h2"/><path d="M16 8h2"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/><path d="M6 12h2"/><path d="M6 8h2"/></svg>`
 const Drawer = createDrawerNavigator();
 
 const MenuBar = () => {
@@ -52,6 +53,16 @@ const MenuBar = () => {
           title: 'Ficha de personagem',
           drawerIcon: ({ color, size }) => (
             <SvgXml style={MenuStyle.Icon} xml={CharacterSheetIconXml} color={color} width={size} height={size}/>
+          )
+        }} 
+      />
+      <Drawer.Screen 
+        name="Books" 
+        component={Books} 
+        options={{ 
+          title: 'Livros disponíveis',
+          drawerIcon: ({ color, size }) => (
+            <SvgXml style={MenuStyle.Icon} xml={BooksXml} color={color} width={size} height={size}/>
           )
         }} 
       />
