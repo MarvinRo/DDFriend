@@ -11,9 +11,6 @@ import { styles } from '../styles/LoginStyles';
 import { NativeModules } from 'react-native';
 const { GOOGLE_WEB_CLIENT_ID } = NativeModules.EnvModule;
 
-console.log(GOOGLE_WEB_CLIENT_ID);
-
-
 GoogleSignin.configure({
   webClientId: GOOGLE_WEB_CLIENT_ID,
   offlineAccess: true,
