@@ -8,6 +8,7 @@ type CharacterSheetForm = {
     onSave: (sheetData: any) => void,
     isSaving: () => void,
     initialData: {
+        life: number
         characterName: string
         characterRace: string
         characterClass: string
@@ -31,13 +32,17 @@ type CharacterSheetForm = {
         modIntelligence: number
         modWisdom: number
         modCharisma: number
-        selectedSkills: string
-
+        efficiencyBonus:number
+        selectedSkills: string[]
+        selectedSafeguards: string[]
+        movement: number
     }
 };
 
 const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: CharacterSheetForm) => {
-    const [life, setLife] = useState(0)
+    const [life, setLife] = useState('')
+    const [efficiencyBonus, setEfficiencyBonus] = useState('')
+    const [characterMovement, setCharacterMovement] = useState('')
     const [characterName, setCharacterName] = useState('');
     const [characterRace, setCharacterRace] = useState('');
     const [characterClass, setCharacterClass] = useState('');
@@ -62,6 +67,7 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
     const [modWisdom, setModWisdom] = useState(0);
     const [modCharisma, setModCharisma] = useState(0);
     const [selectedSkills, setSelectedSkills] = useState<string[]>([])
+    const [selectedSafeguards, setSelectedSafeguards] = useState<string[]>([])
     const [isEnabled] = useState(false);
 
 
@@ -78,39 +84,51 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
         "Prestidigitação(Ladinagem)", "Religião", "Sobrevivência",
     ];
 
+    const allSafeguard = [
+        "Força", "Destreza", "Constituição", "Inteligencia", "Sabedoria", "Carisma",
+    ];
+
     useEffect(() => {
         if (initialData) {
-            setLife(initialData.life || 0)
+            setLife(initialData.life ? initialData.life.toString() : '');
+            setEfficiencyBonus(initialData.efficiencyBonus ? initialData.efficiencyBonus.toString() : '');
             setCharacterName(initialData.characterName || '');
             setCharacterRace(initialData.characterRace || '');
             setCharacterClass(initialData.characterClass || '');
             setCharacterTrend(initialData.characterTrend || '');
             setCharacterAntecedent(initialData.characterAntecedent || '');
-            setStrength(initialData.strength || 0)
-            setDexterity(initialData.dexterity || 0)
-            setConstitution(initialData.constitution || 0)
-            setIntelligence(initialData.intelligence || 0)
-            setWisdom(initialData.wisdom || 0)
-            setCharisma(initialData.charisma || 0)
-            setModExStrength(initialData.modExStrength || 0)
-            setModExDexterity(initialData.modExDexterity || 0)
-            setModExConstitution(initialData.modExConstitution || 0)
-            setModExIntelligence(initialData.modExIntelligence || 0)
-            setModExWisdom(initialData.modExWisdom || 0)
-            setModExCharisma(initialData.modExCharisma || 0)
-            setModStrength(Math.floor((initialData.strength - 10) / 2) || 0)
-            setModDexterity(Math.floor((initialData.dexterity - 10) / 2) || 0)
-            setModConstitution(Math.floor((initialData.constitution - 10) / 2) || 0)
-            setModIntelligence(Math.floor((initialData.intelligence - 10) / 2) || 0)
-            setModWisdom(Math.floor((initialData.wisdom - 10) / 2) || 0)
-            setModCharisma(Math.floor((initialData.charisma - 10) / 2) || 0)
-            setSelectedSkills(initialData.selectedSkills || [''])
+            setStrength(initialData.strength || 0);
+            setDexterity(initialData.dexterity || 0);
+            setConstitution(initialData.constitution || 0);
+            setIntelligence(initialData.intelligence || 0);
+            setWisdom(initialData.wisdom || 0);
+            setCharisma(initialData.charisma || 0);
+            setModExStrength(initialData.modExStrength || 0);
+            setModExDexterity(initialData.modExDexterity || 0);
+            setModExConstitution(initialData.modExConstitution || 0);
+            setModExIntelligence(initialData.modExIntelligence || 0);
+            setModExWisdom(initialData.modExWisdom || 0);
+            setModExCharisma(initialData.modExCharisma || 0);
+            setModStrength(Math.floor((initialData.strength - 10) / 2) || 0);
+            setModDexterity(Math.floor((initialData.dexterity - 10) / 2) || 0);
+            setModConstitution(Math.floor((initialData.constitution - 10) / 2) || 0);
+            setModIntelligence(Math.floor((initialData.intelligence - 10) / 2) || 0);
+            setModWisdom(Math.floor((initialData.wisdom - 10) / 2) || 0);
+            setModCharisma(Math.floor((initialData.charisma - 10) / 2) || 0);
+            setSelectedSkills(initialData.selectedSkills || ['']);
+            setSelectedSafeguards(initialData.selectedSafeguards || ['']);
+            setCharacterMovement(initialData.movement ? initialData.movement.toString() : '');
         }
     }, [initialData]);
 
     const handleSkillToggle = (skillName: string) => {
         setSelectedSkills(prev => prev.includes(skillName) ? prev.filter(s => s !== skillName) : [...prev, skillName]);
     };
+
+    const handleSafeguardToggle = (safeguardName: string) => {
+        setSelectedSafeguards(prev => prev.includes(safeguardName) ? prev.filter(s => s !== safeguardName) : [...prev, safeguardName]);
+    };
+
     const handleSave = () => {
         if (characterName.trim() === '') {
             Alert.alert('Atenção', 'Por favor, insira um nome para o personagem.');
@@ -132,14 +150,16 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
             Alert.alert('Atenção', 'O personagem deve ter uma Tendência moral, é obrigatório.');
             return;
         }
-        else if (!life) {
+        else if (life.toString().trim() === '' || isNaN(Number(life))) {
             Alert.alert('Atenção', 'O personagem deve ter pontos de vida, é obrigatório.');
             return;
         }
-        
+
+
 
         const sheetData = {
-            life,
+            life: Number(life),
+            movement: Number(characterMovement),
             characterName,
             characterRace,
             characterClass,
@@ -152,6 +172,7 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
             wisdom,
             charisma,
             selectedSkills,
+            selectedSafeguards,
             modExStrength,
             modExDexterity,
             modExConstitution,
@@ -167,8 +188,6 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
         }
         onSave(sheetData);
     };
-
-
 
     return (
         <KeyboardAvoidingView
@@ -193,13 +212,12 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
                     </View>
                 </View>
                 <View style={styles.row}>
-                    <TextInput style={styles.inputDouble} placeholder="Vida" value={life.toString()} onChangeText={(text) => setLife(Number(text))} />
-                    {/* <View style={styles.pickerContainer}>
-                        <Picker selectedValue={characterTrend} onValueChange={setCharacterTrend} style={styles.picker}>
-                            <Picker.Item label="Tendência" value="" enabled={false} />
-                            {alignments.map(align => <Picker.Item key={align} label={align} value={align} />)}
-                        </Picker>
-                    </View> */}
+                    <TextInput style={styles.inputDouble} placeholder="Vida" value={life} onChangeText={(text) => setLife(text)} keyboardType="numeric" />
+                    <TextInput style={styles.inputDouble} placeholder="Movimento" value={characterMovement} onChangeText={setCharacterMovement} keyboardType="numeric" />
+                </View>
+                <View style={styles.row}>
+                    <TextInput style={styles.inputDouble} placeholder="Proeficiência" value={efficiencyBonus} onChangeText={(text) => setEfficiencyBonus(text)} keyboardType="numeric" />
+                    {/* <TextInput style={styles.inputDouble} placeholder="Movimento" value={characterMovement} onChangeText={setCharacterMovement} keyboardType="numeric" /> */}
                 </View>
                 <Text style={styles.sectionTitle}>Atributos</Text>
                 <View style={styles.row}>
@@ -272,6 +290,20 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
                             />
                         </View>
                     ))}
+                    <Text style={styles.sectionTitle}>Salvaguardas</Text>
+                    {allSafeguard.map(safeguard => (
+                        <View key={safeguard} style={styles.checkboxItem}>
+                            <PaperText style={styles.checkboxLabel} onPress={() => handleSafeguardToggle(safeguard)}>
+                                {safeguard}
+                            </PaperText>
+                            <Switch
+                                trackColor={{ false: "#767577", true: "#0579c7" }}
+                                thumbColor={isEnabled ? "#0495f5" : "#f4f3f4"}
+                                onValueChange={() => handleSafeguardToggle(safeguard)}
+                                value={selectedSafeguards.includes(safeguard)}
+                            />
+                        </View>
+                    ))}
                     <View style={styles.formButtons}>
                         <Button title="Cancelar" onPress={onClose} color="#f44336" disabled={isSaving} />
                         {isSaving ? <ActivityIndicator color="#3498db" /> : <Button title="Salvar" onPress={handleSave} />}
@@ -286,8 +318,8 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
 
 const styles = StyleSheet.create({
     keyboardAvoidingContainer: {
-        flex: 1,
         width: '100%',
+        margin: 0
     },
     checkboxItem: {
         flexDirection: 'row',
@@ -301,13 +333,10 @@ const styles = StyleSheet.create({
         flex: 1
     },
     formContainer: {
-        width: "90%",
+        width: "100%",
         backgroundColor: '#2a2a2a',
         borderRadius: 10,
         padding: 20,
-        alignSelf: 'center',
-        marginVertical: 30, // Margem no topo e na base
-        paddingBottom: 80, // <-- 1. SOLUÇÃO PARA BOTÕES CORTADOS
     },
     sectionTitle: {
         fontSize: 18,
@@ -340,7 +369,7 @@ const styles = StyleSheet.create({
     },
     pickerContainer: {
         height: 50,
-        width: 150,
+        width: '48%',
         backgroundColor: '#333',
         borderRadius: 5,
         marginBottom: 20,

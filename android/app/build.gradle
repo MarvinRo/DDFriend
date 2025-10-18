@@ -44,12 +44,11 @@ android {
             keyPassword 'android'
         }
         release {
-            if (project.hasProperty('MYAPP_RELEASE_STORE_FILE')) {
-                storeFile file(MYAPP_RELEASE_STORE_FILE)
-                storePassword MYAPP_RELEASE_STORE_PASSWORD
-                keyAlias MYAPP_RELEASE_KEY_ALIAS
-                keyPassword MYAPP_RELEASE_KEY_PASSWORD
-            }
+            def releaseStoreFile = dotenv.getProperty("MYAPP_RELEASE_STORE_FILE")
+            storeFile releaseStoreFile ? file(releaseStoreFile) : null
+            storePassword dotenv.getProperty("MYAPP_RELEASE_STORE_PASSWORD", "FALLBACK_SENHA_PADRAO")
+            keyAlias dotenv.getProperty("MYAPP_RELEASE_KEY_ALIAS", "my-key-alias")
+            keyPassword dotenv.getProperty("MYAPP_RELEASE_KEY_PASSWORD", "FALLBACK_SENHA_PADRAO")
         }
     }
     buildTypes {

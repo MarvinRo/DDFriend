@@ -1,9 +1,7 @@
 import React from 'react';
-import { View, TouchableOpacity, Image} from 'react-native';
+import { View, TouchableOpacity} from 'react-native';
 import { SvgXml } from 'react-native-svg';
-import auth from '@react-native-firebase/auth';
 import { useNavigation } from '@react-navigation/native';
-import { GlobalStyles } from '../styles/GlobalStyles';
 import { NaviBarStyles } from '../styles/NaviBarStyles';
 
 // Ícones como constantes
@@ -13,7 +11,7 @@ const menuIconXml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="
 
 const NaviBar = () => {
   const navigation = useNavigation();
-  const user = auth().currentUser;
+  // const user = auth().currentUser;
 
   const handleMenuPress = () => {
     (navigation as any).openDrawer();
@@ -25,11 +23,11 @@ const NaviBar = () => {
           <SvgXml style={NaviBarStyles.Icon} xml={menuIconXml} />
         </TouchableOpacity>
 
-        {user?.photoURL ? (
+        {/* {user?.photoURL ? (
         <Image source={{ uri: user.photoURL }} />
       ) : (
         <View />
-      )}
+      )} */}
       </View>
   );
 };

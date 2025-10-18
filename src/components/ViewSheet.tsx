@@ -12,6 +12,12 @@ import ImageViewer from 'react-native-image-zoom-viewer';
 
 type ViewSheetProps = {
     initialData: {
+        modCharisma: number;
+        modWisdom: number;
+        modIntelligence: number;
+        modConstitution: number;
+        modStrength: number;
+        life:string;
         characterRace: string;
         characterName: string;
         characterClass: string;
@@ -32,7 +38,10 @@ type ViewSheetProps = {
         silver: number;
         copper: number;
         armor: number;
-        selectedSkills: []
+        movement:number;
+        efficiencyBonus:number;
+        selectedSkills: string[];
+        selectedSafeguards:string[];
     }
     initialBag: {
         platina: number;
@@ -43,7 +52,7 @@ type ViewSheetProps = {
         armor: number;
         items: string;
     }
-    userInfo: { _user: [] }
+    userInfo: { _user: { displayName: string } }
     onClose: () => void;
 };
 
@@ -55,8 +64,6 @@ const ViewSheet = ({ onClose, initialData, initialBag, userInfo }: ViewSheetProp
         { props: { source: require('../assets/images/ficha-p2.png') } },
         { props: { source: require('../assets/images/ficha-p3.png') } },
     ];
-    console.log(initialBag);
-
     const overlays = [
         (
             <>
@@ -127,6 +134,115 @@ const ViewSheet = ({ onClose, initialData, initialBag, userInfo }: ViewSheetProp
                 </View>
                 <View style={[styles.infoContainer, { top: '73.4%', left: '2.5%' }]}>
                     <Text style={styles.modifierStatus}>{initialData.modWisdom + 10}</Text>
+                </View>
+                {/* Bônus de proeficiência */}
+                <View style={[styles.infoContainer, { top: '19%', left: '14.8%' }]}>
+                    <Text style={styles.modifier}>{initialData.efficiencyBonus > 0 ? "+"+ initialData.efficiencyBonus : 0}</Text>
+                </View>
+                {/* Informações de Salvaguardas */}
+                <View style={[styles.infoContainer, { top: '23.3%', left: '17.1%' }]}>
+                    <Text style={[
+                        styles.modifier,
+                        { color: initialData.selectedSafeguards.includes('Força') ? 'black' : 'gray' }
+                    ]}>
+                        {initialData.modStrength}
+                    </Text>
+                </View>
+                <View style={[styles.infoContainer, { top: '19%', left: '14.1%' }]}>
+                    <Text style={styles.selectedSkillss}>
+                        {initialData.selectedSafeguards.includes('Força') ? '.' : ''}
+                    </Text>
+                </View>
+                <View style={[styles.infoContainer, { top: '25%', left: '17.1%' }]}>
+                    <Text style={[
+                        styles.modifier,
+                        { color: initialData.selectedSafeguards.includes('Destreza') ? 'black' : 'gray' }
+                    ]}>
+                        {initialData.modDexterity}
+                    </Text>
+                </View>
+                <View style={[styles.infoContainer, { top: '20.8%', left: '14.1%' }]}>
+                    <Text style={styles.selectedSkillss}>
+                        {initialData.selectedSafeguards.includes('Destreza') ? '.' : ''}
+                    </Text>
+                </View>
+                <View style={[styles.infoContainer, { top: '25%', left: '17.1%' }]}>
+                    <Text style={[
+                        styles.modifier,
+                        { color: initialData.selectedSafeguards.includes('Destreza') ? 'black' : 'gray' }
+                    ]}>
+                        {initialData.modDexterity}
+                    </Text>
+                </View>
+                <View style={[styles.infoContainer, { top: '20.8%', left: '14.1%' }]}>
+                    <Text style={styles.selectedSkillss}>
+                        {initialData.selectedSafeguards.includes('Destreza') ? '.' : ''}
+                    </Text>
+                </View>
+                <View style={[styles.infoContainer, { top: '26.8%', left: '17.1%' }]}>
+                    <Text style={[
+                        styles.modifier,
+                        { color: initialData.selectedSafeguards.includes('Constituição') ? 'black' : 'gray' }
+                    ]}>
+                        {initialData.modConstitution}
+                    </Text>
+                </View>
+                <View style={[styles.infoContainer, { top: '22.5%', left: '14.1%' }]}>
+                    <Text style={styles.selectedSkillss}>
+                        {initialData.selectedSafeguards.includes('Constituição') ? '.' : ''}
+                    </Text>
+                </View>
+                <View style={[styles.infoContainer, { top: '28.6%', left: '17.1%' }]}>
+                    <Text style={[
+                        styles.modifier,
+                        { color: initialData.selectedSafeguards.includes('Inteligencia') ? 'black' : 'gray' }
+                    ]}>
+                        {initialData.modIntelligence}
+                    </Text>
+                </View>
+                <View style={[styles.infoContainer, { top: '24.3%', left: '14.1%' }]}>
+                    <Text style={styles.selectedSkillss}>
+                        {initialData.selectedSafeguards.includes('Inteligencia') ? '.' : ''}
+                    </Text>
+                </View>
+                <View style={[styles.infoContainer, { top: '28.6%', left: '17.1%' }]}>
+                    <Text style={[
+                        styles.modifier,
+                        { color: initialData.selectedSafeguards.includes('Inteligencia') ? 'black' : 'gray' }
+                    ]}>
+                        {initialData.modIntelligence}
+                    </Text>
+                </View>
+                <View style={[styles.infoContainer, { top: '24.3%', left: '14.1%' }]}>
+                    <Text style={styles.selectedSkillss}>
+                        {initialData.selectedSafeguards.includes('Inteligencia') ? '.' : ''}
+                    </Text>
+                </View>
+                <View style={[styles.infoContainer, { top: '30.3%', left: '17.1%' }]}>
+                    <Text style={[
+                        styles.modifier,
+                        { color: initialData.selectedSafeguards.includes('Sabedoria') ? 'black' : 'gray' }
+                    ]}>
+                        {initialData.modWisdom}
+                    </Text>
+                </View>
+                <View style={[styles.infoContainer, { top: '26%', left: '14.1%' }]}>
+                    <Text style={styles.selectedSkillss}>
+                        {initialData.selectedSafeguards.includes('Sabedoria') ? '.' : ''}
+                    </Text>
+                </View>
+                <View style={[styles.infoContainer, { top: '32%', left: '17.1%' }]}>
+                    <Text style={[
+                        styles.modifier,
+                        { color: initialData.selectedSafeguards.includes('Carisma') ? 'black' : 'gray' }
+                    ]}>
+                        {initialData.modCharisma}
+                    </Text>
+                </View>
+                <View style={[styles.infoContainer, { top: '27.8%', left: '14.1%' }]}>
+                    <Text style={styles.selectedSkillss}>
+                        {initialData.selectedSafeguards.includes('Carisma') ? '.' : ''}
+                    </Text>
                 </View>
                 {/* Informações de Pericias */}
                 <View style={[styles.infoContainer, { top: '34%', left: '14.1%' }]}>
@@ -388,6 +504,10 @@ const ViewSheet = ({ onClose, initialData, initialBag, userInfo }: ViewSheetProp
                 {/* iniciativa */}
                 <View style={[styles.infoContainer, { top: '16%', left: '47.5%' }]}>
                     <Text style={styles.status}>{initialData.modDexterity}</Text>
+                </View>
+                {/* Deslocamento */}
+                <View style={[styles.infoContainer, { top: '16%', left: '57.5%' }]}>
+                    <Text style={styles.status}>{initialData.movement}</Text>
                 </View>
             </>
         ),

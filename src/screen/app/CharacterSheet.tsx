@@ -390,18 +390,17 @@ const CharacterSheetScreen = ({ navigation }: any) => {
             </View>
         );
     };
-
     return (
         <View style={GlobalStyles.container}>
-            <SafeAreaView style={{ marginBottom: 20 }}>
+            <SafeAreaView style={{ flex: 1 }}>
                 <NaviBar
                     onMenuPress={() => navigation.openDrawer()}
                     onLogoutPress={async () => await auth().signOut()}
                 />
+                <View style={{ flex: 1 }}>
+                    {renderContent()}
+                </View>
             </SafeAreaView>
-            <View>
-                {renderContent()}
-            </View>
         </View>
     );
 };
@@ -419,17 +418,6 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         padding: 20,
         alignItems: 'center',
-    },
-    modalTitle: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 15,
-    },
-    modalDetail: {
-        fontSize: 16,
-        color: '#ccc',
-        marginBottom: 8,
     },
     listContainer: {
         width: '100%',
