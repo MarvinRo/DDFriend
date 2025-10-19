@@ -175,6 +175,7 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
             selectedSafeguards,
             modExStrength,
             modExDexterity,
+            efficiencyBonus,
             modExConstitution,
             modExIntelligence,
             modExWisdom,
