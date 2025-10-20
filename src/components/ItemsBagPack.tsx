@@ -1,7 +1,8 @@
 // src/components/LevelEditForm.tsx
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, Button, ActivityIndicator } from 'react-native';
+import {ItemsBagPackStyle} from '../styles/ItemsBagPackStyle'
 import firestore from '@react-native-firebase/firestore';
 
 // 1. CORRIJA A TIPAGEM
@@ -79,78 +80,78 @@ const ItemsBagPack = ({ initialData, onSave, onClose, isSaving }: ItemsBagPackPr
     // Dentro do componente ItemsBagPack
 
     return (
-        <View style={styles.formContainer}>
-            <Text style={styles.formTitle}>Mochila de {initialData?.characterName}</Text>
-            <View style={styles.row}>
-                <View style={styles.fieldContainer}>
-                    <Text style={styles.label}>Platina</Text>
+        <View style={ItemsBagPackStyle.formContainer}>
+            <Text style={ItemsBagPackStyle.formTitle}>Mochila de {initialData?.characterName}</Text>
+            <View style={ItemsBagPackStyle.row}>
+                <View style={ItemsBagPackStyle.fieldContainer}>
+                    <Text style={ItemsBagPackStyle.label}>Platina</Text>
                     <TextInput
-                        style={styles.currencyInput}
+                        style={ItemsBagPackStyle.currencyInput}
                         value={platina.toString()} 
                         onChangeText={(text) =>setPlatina(Number(text))}
                         keyboardType="numeric"
                     />
                 </View>
-                <View style={styles.fieldContainer}>
-                    <Text style={styles.label}>Ouro</Text>
+                <View style={ItemsBagPackStyle.fieldContainer}>
+                    <Text style={ItemsBagPackStyle.label}>Ouro</Text>
                     <TextInput
-                        style={styles.currencyInput}
+                        style={ItemsBagPackStyle.currencyInput}
                         value={gold.toString()}
                         onChangeText={(text) =>setGold(Number(text))}
                         keyboardType="numeric"
                     />
                 </View>
             </View>
-            <View style={styles.row}>
-                <View style={styles.fieldContainer}>
-                    <Text style={styles.label}>Prata</Text>
+            <View style={ItemsBagPackStyle.row}>
+                <View style={ItemsBagPackStyle.fieldContainer}>
+                    <Text style={ItemsBagPackStyle.label}>Prata</Text>
                     <TextInput
-                        style={styles.currencyInput}
+                        style={ItemsBagPackStyle.currencyInput}
                         value={silver.toString()}
                         onChangeText={(text) =>setSilver(Number(text))}
                         keyboardType="numeric"
                     />
                 </View>
-                <View style={styles.fieldContainer}>
-                    <Text style={styles.label}>Electrum</Text>
+                <View style={ItemsBagPackStyle.fieldContainer}>
+                    <Text style={ItemsBagPackStyle.label}>Electrum</Text>
                     <TextInput
-                        style={styles.currencyInput}
+                        style={ItemsBagPackStyle.currencyInput}
                         value={electrum.toString()}
                         onChangeText={(text) =>setElectrum(Number(text))}
                         keyboardType="numeric"
                     />
                 </View>
             </View>
-            <View style={styles.row}>
-                <View style={styles.fieldContainer}>
-                    <Text style={styles.label}>Bronze</Text>
+            <View style={ItemsBagPackStyle.row}>
+                <View style={ItemsBagPackStyle.fieldContainer}>
+                    <Text style={ItemsBagPackStyle.label}>Bronze</Text>
                     <TextInput
-                        style={styles.currencyInput}
+                        style={ItemsBagPackStyle.currencyInput}
                         value={copper.toString()}
                         onChangeText={(text) =>setCopper(Number(text))}
                         keyboardType="numeric"
                     />
                 </View>
-                <View style={styles.fieldContainer}>
-                    <Text style={styles.label}>Classe de Armadura</Text>
+                <View style={ItemsBagPackStyle.fieldContainer}>
+                    <Text style={ItemsBagPackStyle.label}>Classe de Armadura</Text>
                     <TextInput
-                        style={styles.currencyInput}
+                        style={ItemsBagPackStyle.currencyInput}
                         value={armor.toString()}
                         onChangeText={(text) =>setArmor(Number(text))}
                         keyboardType="numeric"
                     />
                 </View>
             </View>
-            <Text style={styles.label}>Itens</Text>
+            <Text style={ItemsBagPackStyle.label}>Itens</Text>
             <TextInput
-                style={styles.itemsInput}
+                style={ItemsBagPackStyle.itemsInput}
                 value={items}
                 onChangeText={setItems}
                 multiline={true}
                 numberOfLines={4}
             />
 
-            <View style={styles.formButtons}>
+            <View style={ItemsBagPackStyle.formButtons}>
                 <Button title="Cancelar" onPress={onClose} color="#f44336" />
                 <Button
                     title={isSaving ? "Salvando..." : "Salvar"}
@@ -162,7 +163,7 @@ const ItemsBagPack = ({ initialData, onSave, onClose, isSaving }: ItemsBagPackPr
     );
 };
 
-const styles = StyleSheet.create({
+/* const ItemsBagPackStyle = StyleSheet.create({
     formContainer: {
         width: "90%",
         backgroundColor: '#2a2a2a',
@@ -237,6 +238,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         width: "auto"
     },
-});
+}); */
 
 export default ItemsBagPack;

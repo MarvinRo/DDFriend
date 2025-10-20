@@ -1,7 +1,8 @@
 // src/components/LevelEditForm.tsx
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button} from 'react-native';
+import { LevelEditFormStyle } from '../styles/LevelEditForm';
 
 type LevelEditForm = {
     initialData: {
@@ -36,27 +37,27 @@ const LevelEditForm = ({ initialData, onSave, onClose, isSaving }: LevelEditForm
     };
 
     return (
-        <View style={styles.formContainer}>
-            <Text style={styles.formTitle}>Editar Nível e XP</Text>
-            <Text style={styles.characterName}>{initialData?.characterName}</Text>
+        <View style={LevelEditFormStyle.formContainer}>
+            <Text style={LevelEditFormStyle.formTitle}>Editar Nível e XP</Text>
+            <Text style={LevelEditFormStyle.characterName}>{initialData?.characterName}</Text>
 
-            <Text style={styles.label}>Nível</Text>
+            <Text style={LevelEditFormStyle.label}>Nível</Text>
             <TextInput
-                style={styles.input}
+                style={LevelEditFormStyle.input}
                 value={level}
                 onChangeText={setLevel}
                 keyboardType="numeric"
             />
 
-            <Text style={styles.label}>Pontos de Experiência (XP)</Text>
+            <Text style={LevelEditFormStyle.label}>Pontos de Experiência (XP)</Text>
             <TextInput
-                style={styles.input}
+                style={LevelEditFormStyle.input}
                 value={experience}
                 onChangeText={setExperience}
                 keyboardType="numeric"
             />
 
-            <View style={styles.formButtons}>
+            <View style={LevelEditFormStyle.formButtons}>
                 <Button title="Cancelar" onPress={onClose} color="#f44336" />
                 <Button
                     title={isSaving ? "Salvando..." : "Salvar"}
@@ -68,7 +69,7 @@ const LevelEditForm = ({ initialData, onSave, onClose, isSaving }: LevelEditForm
     );
 };
 
-const styles = StyleSheet.create({
+/* const LevelEditFormStyle = StyleSheet.create({
     formContainer: {
         width: "90%",
         backgroundColor: '#2a2a2a',
@@ -109,6 +110,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-around',
         marginTop: 10,
     },
-});
+}); */
 
 export default LevelEditForm;

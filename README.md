@@ -1,20 +1,3 @@
-<!-- # THIS APP IS A CREATION OF MINE FOR MY FRIENDS AND I WHO LOVE TO PLAY TOGETHER
-
-# TO START THE APPLICATION CODE JUST INSTALL THE DEPENDENCIES WITH:
-
-- npm i or npm install
-
-# Google-services.json file
-- download your google-services.json file from your firebase or google clound and place it inside the root of the android/app folder
-
-# YOU SHOULD CREATE A FILE .ENV AT THE ROOT OF THE FOLDER TO USE THE FIREBASSE ACCESS KEY
-# EXEMPLE .env
-
-- GOOGLE_WEB_CLIENT_ID= "access key for your firebase"
-
-
-# AFTER THAT JUST START THE SYSTEM AS YOU SEE FIT. -->
-
 # D&D MOBILE CHARACTER SHEET
 
 This application is a personal project created to manage Dungeons & Dragons character sheets, facilitating gameplay among friends.
@@ -33,7 +16,7 @@ npm install
 # OR
 npm i
 
-### 2. Native Dependencies Setup (iOS)
+<!-- ### 2. Native Dependencies Setup (iOS)
 
 If you plan to run the app on iOS, you must install the native dependencies using **CocoaPods**:
 
@@ -44,7 +27,7 @@ cd ios
 pod install
 
 # Go back to the project root
-cd ..
+cd .. -->
 
 ### 3. Firebase Configuration and Credentials (REQUIRED)
 
@@ -57,7 +40,7 @@ These files must be downloaded directly from the Firebase console and placed in 
 | Platform | Required File | Location |
 | :--- | :--- | :--- |
 | **Android** | `google-services.json` | `android/app/` |
-| **iOS** | `GoogleService-Info.plist` | `ios/` |
+<!-- | **iOS** | `GoogleService-Info.plist` | `ios/` | -->
 
 #### B. Environment Variables (.env)
 
@@ -66,7 +49,12 @@ Create a file named **`.env`** in the **root of the project folder** to store ex
 **Example of .env:**
 
 # This key is typically required for Google Sign-In via Firebase
+
 GOOGLE_WEB_CLIENT_ID="YOUR_FIREBASE_WEB_CLIENT_ACCESS_KEY"
+MYAPP_RELEASE_STORE_FILE=my-release-key.keystore
+MYAPP_RELEASE_KEY_ALIAS=my-key-alias
+MYAPP_RELEASE_STORE_PASSWORD=STORE_PASSWORD
+MYAPP_RELEASE_KEY_PASSWORD=KEY_PASSWORD
 
 *(Replace "YOUR_FIREBASE_WEB_CLIENT_ACCESS_KEY" with your actual Firebase credential.)*
 
@@ -77,9 +65,12 @@ GOOGLE_WEB_CLIENT_ID="YOUR_FIREBASE_WEB_CLIENT_ACCESS_KEY"
 Ensure you have a configured Android or iOS emulator running, or a physical device connected with USB Debugbing enabled.
 
 # To start the application on Android
-npm run android
+npm run start
 
+# In another terminal run the command
+npm run android
+<!-- 
 # To start the application on iOS
-npm run ios
+npm run ios -->
 
 **Tip:** If you encounter environment errors, run `npx react-native doctor` to diagnose issues with your setup.

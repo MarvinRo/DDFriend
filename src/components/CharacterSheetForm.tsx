@@ -1,6 +1,7 @@
 import { Picker } from '@react-native-picker/picker';
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform, Switch } from 'react-native';
+import { View, Text, TextInput, Button, ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform, Switch } from 'react-native';
+import { CharacterSheetFormStyle } from '../styles/CharacterSheetFormStyle'
 import { Text as PaperText } from 'react-native-paper';
 
 type CharacterSheetForm = {
@@ -193,35 +194,35 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.keyboardAvoidingContainer}
+            style={CharacterSheetFormStyle.keyboardAvoidingContainer}
         >
-            <ScrollView style={styles.formContainer}>
-                <Text style={styles.formTitle}>{initialData ? 'Editar Ficha' : 'Nova Ficha'}</Text>
+            <ScrollView style={CharacterSheetFormStyle.formContainer}>
+                <Text style={CharacterSheetFormStyle.formTitle}>{initialData ? 'Editar Ficha' : 'Nova Ficha'}</Text>
 
-                <TextInput style={styles.input} placeholder="Nome do Personagem" value={characterName} onChangeText={setCharacterName} />
-                <View style={styles.row}>
-                    <TextInput style={styles.inputDouble} placeholder="Raça" value={characterRace} onChangeText={setCharacterRace} />
-                    <TextInput style={styles.inputDouble} placeholder="Classe" value={characterClass} onChangeText={setCharacterClass} />
+                <TextInput style={CharacterSheetFormStyle.input} placeholder="Nome do Personagem" value={characterName} onChangeText={setCharacterName} />
+                <View style={CharacterSheetFormStyle.row}>
+                    <TextInput style={CharacterSheetFormStyle.inputDouble} placeholder="Raça" value={characterRace} onChangeText={setCharacterRace} />
+                    <TextInput style={CharacterSheetFormStyle.inputDouble} placeholder="Classe" value={characterClass} onChangeText={setCharacterClass} />
                 </View>
-                <View style={styles.row}>
-                    <TextInput style={styles.inputDouble} placeholder="Antecedente" value={characterAntecedent} onChangeText={setCharacterAntecedent} />
-                    <View style={styles.pickerContainer}>
-                        <Picker selectedValue={characterTrend} onValueChange={setCharacterTrend} style={styles.picker}>
+                <View style={CharacterSheetFormStyle.row}>
+                    <TextInput style={CharacterSheetFormStyle.inputDouble} placeholder="Antecedente" value={characterAntecedent} onChangeText={setCharacterAntecedent} />
+                    <View style={CharacterSheetFormStyle.pickerContainer}>
+                        <Picker selectedValue={characterTrend} onValueChange={setCharacterTrend} style={CharacterSheetFormStyle.picker}>
                             <Picker.Item label="Tendência" value="" enabled={false} />
                             {alignments.map(align => <Picker.Item key={align} label={align} value={align} />)}
                         </Picker>
                     </View>
                 </View>
-                <View style={styles.row}>
-                    <TextInput style={styles.inputDouble} placeholder="Vida" value={life} onChangeText={(text) => setLife(text)} keyboardType="numeric" />
-                    <TextInput style={styles.inputDouble} placeholder="Movimento" value={characterMovement} onChangeText={setCharacterMovement} keyboardType="numeric" />
+                <View style={CharacterSheetFormStyle.row}>
+                    <TextInput style={CharacterSheetFormStyle.inputDouble} placeholder="Vida" value={life} onChangeText={(text) => setLife(text)} keyboardType="numeric" />
+                    <TextInput style={CharacterSheetFormStyle.inputDouble} placeholder="Movimento" value={characterMovement} onChangeText={setCharacterMovement} keyboardType="numeric" />
                 </View>
-                <View style={styles.row}>
-                    <TextInput style={styles.inputDouble} placeholder="Proeficiência" value={efficiencyBonus} onChangeText={(text) => setEfficiencyBonus(text)} keyboardType="numeric" />
-                    {/* <TextInput style={styles.inputDouble} placeholder="Movimento" value={characterMovement} onChangeText={setCharacterMovement} keyboardType="numeric" /> */}
+                <View style={CharacterSheetFormStyle.row}>
+                    <TextInput style={CharacterSheetFormStyle.inputDouble} placeholder="Proeficiência" value={efficiencyBonus} onChangeText={(text) => setEfficiencyBonus(text)} keyboardType="numeric" />
+                    {/* <TextInput style={CharacterSheetFormStyle.inputDouble} placeholder="Movimento" value={characterMovement} onChangeText={setCharacterMovement} keyboardType="numeric" /> */}
                 </View>
-                <Text style={styles.sectionTitle}>Atributos</Text>
-                <View style={styles.row}>
+                <Text style={CharacterSheetFormStyle.sectionTitle}>Atributos</Text>
+                <View style={CharacterSheetFormStyle.row}>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", width: "38%" }}>
                         <Text style={{ color: "#f5f5f5" }}>Força</Text>
                         <Text style={{ color: "#f5f5f5" }}>Mod. Ex</Text>
@@ -232,15 +233,15 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
                     </View>
                 </View>
 
-                <View style={styles.row}>
-                    <TextInput style={styles.inputQuad} placeholder="Força" value={strength.toString()} onChangeText={(text) => setStrength(Number(text))} keyboardType="numeric" />
-                    <TextInput style={styles.inputQuad} placeholder="Mod. Força" value={modExStrength.toString()} onChangeText={(text) => setModExStrength(Number(text))} keyboardType="numeric" />
+                <View style={CharacterSheetFormStyle.row}>
+                    <TextInput style={CharacterSheetFormStyle.inputQuad} placeholder="Força" value={strength.toString()} onChangeText={(text) => setStrength(Number(text))} keyboardType="numeric" />
+                    <TextInput style={CharacterSheetFormStyle.inputQuad} placeholder="Mod. Força" value={modExStrength.toString()} onChangeText={(text) => setModExStrength(Number(text))} keyboardType="numeric" />
                     <Text style={{ color: "#f5f5f5" }}>{Number(modStrength) || Number(modExStrength) > 0 ? `+${Number(modStrength) + Number(modExStrength)}` : Number(modStrength)}</Text>
-                    <TextInput style={styles.inputQuad} placeholder="Destreza" value={dexterity.toString()} onChangeText={(text) => setDexterity(Number(text))} keyboardType="numeric" />
-                    <TextInput style={styles.inputQuad} placeholder="Mod. Destreza" value={modExDexterity.toString()} onChangeText={(text) => setModExDexterity(Number(text))} keyboardType="numeric" />
+                    <TextInput style={CharacterSheetFormStyle.inputQuad} placeholder="Destreza" value={dexterity.toString()} onChangeText={(text) => setDexterity(Number(text))} keyboardType="numeric" />
+                    <TextInput style={CharacterSheetFormStyle.inputQuad} placeholder="Mod. Destreza" value={modExDexterity.toString()} onChangeText={(text) => setModExDexterity(Number(text))} keyboardType="numeric" />
                     <Text style={{ color: "#f5f5f5" }}>{Number(modDexterity) || Number(modExDexterity) > 0 ? `+${Number(modDexterity) + Number(modExDexterity)}` : Number(modDexterity)}</Text>
                 </View>
-                <View style={styles.row}>
+                <View style={CharacterSheetFormStyle.row}>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", width: "38%" }}>
                         <Text style={{ color: "#f5f5f5" }}>Const.</Text>
                         <Text style={{ color: "#f5f5f5" }}>Mod. Ex</Text>
@@ -250,15 +251,15 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
                         <Text style={{ color: "#f5f5f5" }}>Mod. Ex</Text>
                     </View>
                 </View>
-                <View style={styles.row}>
-                    <TextInput style={styles.inputQuad} placeholder="Constituição" value={constitution.toString()} onChangeText={(text) => setConstitution(Number(text))} keyboardType="numeric" />
-                    <TextInput style={styles.inputQuad} placeholder="Mod. Constituição" value={modExConstitution.toString()} onChangeText={(text) => setModExConstitution(Number(text))} keyboardType="numeric" />
+                <View style={CharacterSheetFormStyle.row}>
+                    <TextInput style={CharacterSheetFormStyle.inputQuad} placeholder="Constituição" value={constitution.toString()} onChangeText={(text) => setConstitution(Number(text))} keyboardType="numeric" />
+                    <TextInput style={CharacterSheetFormStyle.inputQuad} placeholder="Mod. Constituição" value={modExConstitution.toString()} onChangeText={(text) => setModExConstitution(Number(text))} keyboardType="numeric" />
                     <Text style={{ color: "#f5f5f5" }}>{Number(modConstitution) || Number(modExConstitution) > 0 ? `+${Number(modConstitution) + Number(modExConstitution)}` : Number(modConstitution)}</Text>
-                    <TextInput style={styles.inputQuad} placeholder="Inteligência" value={intelligence.toString()} onChangeText={(text) => setIntelligence(Number(text))} keyboardType="numeric" />
-                    <TextInput style={styles.inputQuad} placeholder="Mod. Inteligência" value={modExIntelligence.toString()} onChangeText={(text) => setModExIntelligence(Number(text))} keyboardType="numeric" />
+                    <TextInput style={CharacterSheetFormStyle.inputQuad} placeholder="Inteligência" value={intelligence.toString()} onChangeText={(text) => setIntelligence(Number(text))} keyboardType="numeric" />
+                    <TextInput style={CharacterSheetFormStyle.inputQuad} placeholder="Mod. Inteligência" value={modExIntelligence.toString()} onChangeText={(text) => setModExIntelligence(Number(text))} keyboardType="numeric" />
                     <Text style={{ color: "#f5f5f5" }}>{Number(modIntelligence) || Number(modExIntelligence) > 0 ? `+${Number(modIntelligence) + Number(modExIntelligence)}` : Number(modIntelligence)}</Text>
                 </View>
-                <View style={styles.row}>
+                <View style={CharacterSheetFormStyle.row}>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", width: "38%" }}>
                         <Text style={{ color: "#f5f5f5" }}>Sabedo.</Text>
                         <Text style={{ color: "#f5f5f5" }}>Mod. Ex</Text>
@@ -268,19 +269,19 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
                         <Text style={{ color: "#f5f5f5" }}>Mod. Ex</Text>
                     </View>
                 </View>
-                <View style={styles.row}>
-                    <TextInput style={styles.inputQuad} placeholder="Sabedoria" value={wisdom.toString()} onChangeText={(text) => setWisdom(Number(text))} keyboardType="numeric" />
-                    <TextInput style={styles.inputQuad} placeholder="Mod. Sabedoria" value={modExWisdom.toString()} onChangeText={(text) => setModExWisdom(Number(text))} keyboardType="numeric" />
+                <View style={CharacterSheetFormStyle.row}>
+                    <TextInput style={CharacterSheetFormStyle.inputQuad} placeholder="Sabedoria" value={wisdom.toString()} onChangeText={(text) => setWisdom(Number(text))} keyboardType="numeric" />
+                    <TextInput style={CharacterSheetFormStyle.inputQuad} placeholder="Mod. Sabedoria" value={modExWisdom.toString()} onChangeText={(text) => setModExWisdom(Number(text))} keyboardType="numeric" />
                     <Text style={{ color: "#f5f5f5" }}>{Number(modWisdom) || Number(modExWisdom) > 0 ? `+${Number(modWisdom) + Number(modExWisdom)}` : Number(modWisdom)}</Text>
-                    <TextInput style={styles.inputQuad} placeholder="Carisma" value={charisma.toString()} onChangeText={(text) => setCharisma(Number(text))} keyboardType="numeric" />
-                    <TextInput style={styles.inputQuad} placeholder="Mod. Carisma" value={modExCharisma.toString()} onChangeText={(text) => setModExCharisma(Number(text))} keyboardType="numeric" />
+                    <TextInput style={CharacterSheetFormStyle.inputQuad} placeholder="Carisma" value={charisma.toString()} onChangeText={(text) => setCharisma(Number(text))} keyboardType="numeric" />
+                    <TextInput style={CharacterSheetFormStyle.inputQuad} placeholder="Mod. Carisma" value={modExCharisma.toString()} onChangeText={(text) => setModExCharisma(Number(text))} keyboardType="numeric" />
                     <Text style={{ color: "#f5f5f5" }}>{Number(modCharisma) || Number(modExCharisma) > 0 ? `+${Number(modCharisma) + Number(modExCharisma)}` : Number(modCharisma)}</Text>
                 </View>
-                <View style={styles.sectionContainer}>
-                    <Text style={styles.sectionTitle}>Perícias</Text>
+                <View style={CharacterSheetFormStyle.sectionContainer}>
+                    <Text style={CharacterSheetFormStyle.sectionTitle}>Perícias</Text>
                     {allSkills.map(skill => (
-                        <View key={skill} style={styles.checkboxItem}>
-                            <PaperText style={styles.checkboxLabel} onPress={() => handleSkillToggle(skill)}>
+                        <View key={skill} style={CharacterSheetFormStyle.checkboxItem}>
+                            <PaperText style={CharacterSheetFormStyle.checkboxLabel} onPress={() => handleSkillToggle(skill)}>
                                 {skill}
                             </PaperText>
                             <Switch
@@ -291,10 +292,10 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
                             />
                         </View>
                     ))}
-                    <Text style={styles.sectionTitle}>Salvaguardas</Text>
+                    <Text style={CharacterSheetFormStyle.sectionTitle}>Salvaguardas</Text>
                     {allSafeguard.map(safeguard => (
-                        <View key={safeguard} style={styles.checkboxItem}>
-                            <PaperText style={styles.checkboxLabel} onPress={() => handleSafeguardToggle(safeguard)}>
+                        <View key={safeguard} style={CharacterSheetFormStyle.checkboxItem}>
+                            <PaperText style={CharacterSheetFormStyle.checkboxLabel} onPress={() => handleSafeguardToggle(safeguard)}>
                                 {safeguard}
                             </PaperText>
                             <Switch
@@ -305,7 +306,7 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
                             />
                         </View>
                     ))}
-                    <View style={styles.formButtons}>
+                    <View style={CharacterSheetFormStyle.formButtons}>
                         <Button title="Cancelar" onPress={onClose} color="#f44336" disabled={isSaving} />
                         {isSaving ? <ActivityIndicator color="#3498db" /> : <Button title="Salvar" onPress={handleSave} />}
                     </View>
@@ -316,123 +317,5 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
         </KeyboardAvoidingView >
     );
 };
-
-const styles = StyleSheet.create({
-    keyboardAvoidingContainer: {
-        width: '100%',
-        margin: 0
-    },
-    checkboxItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginVertical: 8,
-
-    },
-    checkboxLabel: {
-        color: '#fff',
-        marginLeft: 8,
-        flex: 1
-    },
-    formContainer: {
-        width: "100%",
-        backgroundColor: '#2a2a2a',
-        borderRadius: 10,
-        padding: 20,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 10,
-        marginTop: 10,
-    },
-    row: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    placeholderItem: {
-        color: '#999',
-    },
-    sectionContainer: {
-        marginBottom: 20,
-    },
-
-    listContainer: {
-        width: '100%',
-        display: "flex",
-        justifyContent: "center",
-        flexDirection: "column"
-    },
-    emptyListContainer: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 50,
-    },
-    pickerContainer: {
-        height: 50,
-        width: '48%',
-        backgroundColor: '#333',
-        borderRadius: 5,
-        marginBottom: 20,
-        justifyContent: 'center',
-    },
-    picker: {
-        color: '#fff',
-    },
-    newSheetButton: {
-        bottom: 30,
-        alignSelf: 'center',
-        backgroundColor: '#3498db',
-        paddingVertical: 15,
-        paddingHorizontal: 30,
-        borderRadius: 30,
-    },
-    newSheetButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    formTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    input: {
-        backgroundColor: '#333',
-        color: '#fff',
-        borderRadius: 5,
-        paddingHorizontal: 15,
-        paddingVertical: 10,
-        marginBottom: 20,
-        fontSize: 16,
-    },
-    inputDouble: {
-        backgroundColor: '#333',
-        color: '#fff',
-        width: "48%",
-        borderRadius: 5,
-        paddingHorizontal: 15,
-        paddingVertical: 10,
-        marginBottom: 20,
-        fontSize: 16,
-    },
-    inputQuad: {
-        backgroundColor: '#333',
-        color: '#fff',
-        width: "16%",
-        borderRadius: 5,
-        paddingHorizontal: 15,
-        paddingVertical: 10,
-        marginBottom: 20,
-        fontSize: 16,
-    },
-    formButtons: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginVertical: 20,
-    },
-});
 
 export default CharacterSheetForm;
