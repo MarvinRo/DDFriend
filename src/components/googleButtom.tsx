@@ -16,8 +16,6 @@ GoogleSignin.configure({
   offlineAccess: true,
 });
 
-console.log(GOOGLE_WEB_CLIENT_ID);
-
 const GoogleIcon = () => (
   <SvgUri
     width="24"

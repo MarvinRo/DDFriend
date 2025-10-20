@@ -79,7 +79,6 @@ const CharacterSheetScreen = ({ navigation }: any) => {
 
             if (!bagpackQuery.empty) {
                 const bagData = bagpackQuery.docs[0].data();
-                console.log("DADOS DA MOCHILA ENCONTRADOS:", bagData);
                 setBagDataForView(bagData); // Armazena os dados da mochila no novo estado
             } else {
                 // Se não encontrar, define como um objeto vazio para não dar erro
