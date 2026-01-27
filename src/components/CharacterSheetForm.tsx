@@ -1,14 +1,20 @@
+/* eslint-disable react-native/no-inline-styles */
 import { Picker } from '@react-native-picker/picker';
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform, Switch } from 'react-native';
+import { View, Text, TextInput, Button, ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform, Switch, Image, TouchableOpacity } from 'react-native';
 import { CharacterSheetFormStyle } from '../styles/CharacterSheetFormStyle'
 import { Text as PaperText } from 'react-native-paper';
+import { launchImageLibrary, ImageLibraryOptions } from 'react-native-image-picker';
+import { SvgXml } from 'react-native-svg';
+
+const deleteIconXml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`
 
 type CharacterSheetForm = {
     onClose: () => void,
     onSave: (sheetData: any) => void,
     isSaving: () => void,
     initialData: {
+        characterPhoto?: string;
         life: number
         characterName: string
         characterRace: string
@@ -33,7 +39,7 @@ type CharacterSheetForm = {
         modIntelligence: number
         modWisdom: number
         modCharisma: number
-        efficiencyBonus:number
+        efficiencyBonus: number
         selectedSkills: string[]
         selectedSafeguards: string[]
         movement: number
@@ -70,6 +76,7 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
     const [selectedSkills, setSelectedSkills] = useState<string[]>([])
     const [selectedSafeguards, setSelectedSafeguards] = useState<string[]>([])
     const [isEnabled] = useState(false);
+    const [characterPhoto, setCharacterPhoto] = useState<string | null>(null);
 
 
     const alignments = [
@@ -119,8 +126,53 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
             setSelectedSkills(initialData.selectedSkills || ['']);
             setSelectedSafeguards(initialData.selectedSafeguards || ['']);
             setCharacterMovement(initialData.movement ? initialData.movement.toString() : '');
+            setCharacterPhoto(initialData.characterPhoto || '');
         }
     }, [initialData]);
+
+    const removeImage = () => {
+        Alert.alert(
+            "Remover Foto",
+            "Tem certeza que deseja remover a foto do personagem?",
+            [
+                { text: "Cancelar", style: "cancel" },
+                {
+                    text: "Remover",
+                    style: "destructive",
+                    onPress: () => setCharacterPhoto(null)
+                }
+            ]
+        );
+    };
+
+    const selectImage = () => {
+        const options: ImageLibraryOptions = {
+            mediaType: 'photo',
+            quality: 0.5,      // Reduzi para 0.5 para garantir arquivos ainda menores
+            maxWidth: 600,     // 600px é excelente para avatares e economiza muito espaço
+            maxHeight: 600,
+            includeBase64: false,
+        };
+
+        launchImageLibrary(options, (response) => {
+            if (response.didCancel) return;
+
+            if (response.assets && response.assets.length > 0) {
+                const file = response.assets[0];
+                const maxSizeInBytes = 200 * 1024;
+
+                if (file.fileSize && file.fileSize > maxSizeInBytes) {
+                    Alert.alert(
+                        "Arquivo muito grande",
+                        `A imagem atual possui ${(file.fileSize / 1024).toFixed(0)}KB. O limite é 200KB.`
+                    );
+                    return;
+                }
+
+                setCharacterPhoto(file.uri || null);
+            }
+        });
+    };
 
     const handleSkillToggle = (skillName: string) => {
         setSelectedSkills(prev => prev.includes(skillName) ? prev.filter(s => s !== skillName) : [...prev, skillName]);
@@ -187,6 +239,7 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
             modIntelligence: modExIntelligence ? Math.floor((intelligence - 10) / 2) + modExIntelligence : Math.floor((intelligence - 10) / 2),
             modWisdom: modExWisdom ? Math.floor((wisdom - 10) / 2) + modExWisdom : Math.floor((wisdom - 10) / 2),
             modCharisma: modExCharisma ? Math.floor((charisma - 10) / 2) + modExCharisma : Math.floor((charisma - 10) / 2),
+            characterPhoto: characterPhoto,
         }
         onSave(sheetData);
     };
@@ -198,6 +251,45 @@ const CharacterSheetForm = ({ onClose, onSave, isSaving, initialData }: Characte
         >
             <ScrollView style={CharacterSheetFormStyle.formContainer}>
                 <Text style={CharacterSheetFormStyle.formTitle}>{initialData ? 'Editar Ficha' : 'Nova Ficha'}</Text>
+
+                <View style={{ alignItems: 'center', marginBottom: 20 }}>
+                    {/* Container da Foto */}
+                    <TouchableOpacity onPress={selectImage} style={CharacterSheetFormStyle.photoPicker}>
+                        {characterPhoto ? (
+                            <Image
+                                source={{ uri: characterPhoto }}
+                                style={{ width: 120, height: 120, borderRadius: 60, resizeMode: 'cover' }}
+                            />
+                        ) : (
+                            <View style={{
+                                width: 120, height: 120, borderRadius: 60,
+                                backgroundColor: '#333', justifyContent: 'center', alignItems: 'center',
+                                borderWidth: 1, borderColor: '#f5f5f5', borderStyle: 'dashed'
+                            }}>
+                                <Text style={{ color: '#f5f5f5', textAlign: 'center' }}>Adicionar Foto</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+
+                    {/* Botão de Excluir (Abaixo da foto) */}
+                    {characterPhoto && (
+                        <TouchableOpacity
+                            onPress={removeImage}
+                            style={{
+                                flexDirection: 'row', // Para alinhar o ícone e o texto lado a lado
+                                alignItems: 'center',
+                                marginTop: 10,       // Espaço entre a foto e o botão
+                                backgroundColor: '#f44336',
+                                paddingVertical: 6,
+                                paddingHorizontal: 12,
+                                borderRadius: 8,
+                            }}
+                        >
+                            <SvgXml xml={deleteIconXml} width="16" height="16" stroke="#f5f5f5" />
+                            <Text style={{ color: '#f5f5f5', marginLeft: 8, fontWeight: 'bold' }}>Remover Foto</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
 
                 <TextInput style={CharacterSheetFormStyle.input} placeholder="Nome do Personagem" value={characterName} onChangeText={setCharacterName} />
                 <View style={CharacterSheetFormStyle.row}>

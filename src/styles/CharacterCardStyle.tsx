@@ -8,7 +8,7 @@ export const CharacterCardStyle = StyleSheet.create({
         borderColor: "#f5f5f5", // Um pouco mais sutil
         marginHorizontal: 10,
         marginVertical: 10,
-        flex: 1, 
+        flex: 1,
         minHeight: 160,
         minWidth: 160,
         flexDirection: 'column', // Garante que o corpo e o rodapé fiquem um sobre o outro
@@ -52,7 +52,7 @@ export const CharacterCardStyle = StyleSheet.create({
     iconButton: {
         padding: 4, // Área de toque um pouco maior
     },
-    
+
     // --- Rodapé ---
     cardFooter: {
         flexDirection: "row",
@@ -71,4 +71,19 @@ export const CharacterCardStyle = StyleSheet.create({
         color: "#f5f5f5",
         fontSize: 14,
     },
+    iconCard: {
+        position: 'absolute', // Tira do fluxo normal
+        top: -8, // Sobe o ícone (metade da altura visual desejada)
+        left: -8, // Distância da esquerda
+        zIndex: 10, // Garante que fique acima de tudo
+        backgroundColor: '#1f1e1e', // COR DO FUNDO DA SUA TELA (Mude isso para cobrir a linha da borda)
+        borderRadius: 60,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 35,
+        height: 35,
+        padding: 0,
+        overflow: 'hidden',
+    }
+
 });

@@ -66,10 +66,7 @@ const CharacterSheetScreen = ({ navigation }: any) => {
     }; */
     const handleOpensetViewSheet = async (sheet: any) => {
         try {
-            // Mostra um loading enquanto busca os dados da mochila
             setIsLoading(true);
-
-            // Busca os dados da subcoleção 'bagpack'
             const bagpackQuery = await firestore()
                 .collection('characterSheets')
                 .doc(sheet.id)
@@ -363,6 +360,7 @@ const CharacterSheetScreen = ({ navigation }: any) => {
                         style={{ width: "100%" }}
                         renderItem={({ item }: any) => (
                             <CharacterCard
+                                characterPhoto={item.characterPhoto}
                                 name={item.characterName}
                                 level={item.level}
                                 race={item.characterRace}
