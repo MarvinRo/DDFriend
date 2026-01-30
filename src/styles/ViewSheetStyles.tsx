@@ -14,7 +14,7 @@ export const ViewSheetStyles = StyleSheet.create({
         borderRadius: 5,
     },
     infoText: {
-        fontSize: 8,
+        fontSize: 10,
         color: '#000',
     },
     status: {
@@ -30,12 +30,15 @@ export const ViewSheetStyles = StyleSheet.create({
         color: '#000',
     },
     itemsBag: {
-        fontSize: 6,
+        flex:1,
+        marginLeft: 4,
+        fontSize: 10,
         color: '#000',
         width:"100%",
-        maxWidth:70,
+        maxWidth:"100%",
         height:"auto",
         maxHeight:100,
+        backgroundColor:"red"
     },
     modifierStatus: {
         fontSize: 13,

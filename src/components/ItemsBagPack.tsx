@@ -7,7 +7,7 @@ import firestore from '@react-native-firebase/firestore';
 
 // 1. CORRIJA A TIPAGEM
 type ItemsBagPackProps = {
-    initialData: { id: string; characterName: string; }; // Recebe dados básicos do personagem
+    initialData: { id: string; characterName: string; };
     onSave: (data: any, bagpackDocId: string) => void;
     onClose: () => void;
     isSaving: boolean;

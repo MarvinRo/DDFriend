@@ -1,14 +1,7 @@
 import React, { useState } from 'react';
-import {
-    View,
-    Text,
-    Button,
-    Modal,
-    ImageBackground,
-} from 'react-native';
-import ImageViewer from 'react-native-image-zoom-viewer';
-import { ViewSheetStyles } from '../styles/ViewSheetStyles';
+import { ScrollView, View, Text, TextInput, StyleSheet, TouchableOpacity, useWindowDimensions, Modal } from 'react-native';
 
+// Definição das Props (Mantive a sua estrutura original)
 type ViewSheetProps = {
     initialData: {
         modCharisma: number;
@@ -16,7 +9,7 @@ type ViewSheetProps = {
         modIntelligence: number;
         modConstitution: number;
         modStrength: number;
-        life:string;
+        life: string;
         characterRace: string;
         characterName: string;
         characterClass: string;
@@ -37,10 +30,10 @@ type ViewSheetProps = {
         silver: number;
         copper: number;
         armor: number;
-        movement:number;
-        efficiencyBonus:number;
+        movement: number;
+        efficiencyBonus: number;
         selectedSkills: string[];
-        selectedSafeguards:string[];
+        selectedSafeguards: string[];
     }
     initialBag: {
         platina: number;
@@ -55,498 +48,565 @@ type ViewSheetProps = {
     onClose: () => void;
 };
 
-const ViewSheet = ({ onClose, initialData, initialBag, userInfo }: ViewSheetProps) => {
-    const [currentIndex, setCurrentIndex] = useState(0);
+export default function DnDCharacterSheet(props: ViewSheetProps) {
+    const { width } = useWindowDimensions();
+    const [currentPage, setCurrentPage] = useState(1);
+    const isSmall = false;
 
-    const imageUrls = [
-        { props: { source: require('../assets/images/ficha-p1.png') } },
-        { props: { source: require('../assets/images/ficha-p2.png') } },
-        { props: { source: require('../assets/images/ficha-p3.png') } },
+    // Estados locais para interatividade
+    const [selectedSkills, setSelectedSkills] = useState<string[]>(props.initialData.selectedSkills || []);
+    const [selectedSafeguards, setSelectedSafeguards] = useState<string[]>(props.initialData.selectedSafeguards || []);
+
+    const [character] = useState({
+        proficiencyBonus: props.initialData.efficiencyBonus || 2,
+    });
+
+    // Funções auxiliares
+    const calculateModifier = (score: number) => Math.floor((score - 10) / 2);
+    const formatModifier = (mod: number) => (mod >= 0 ? `+${mod}` : `${mod}`);
+
+    const [leftColHeight, setLeftColHeight] = useState(0);
+
+    const onLeftColLayout = (event) => {
+        const { height } = event.nativeEvent.layout;
+        setLeftColHeight(height);
+    };
+
+    // Dados
+    const attributes = [
+        { key: 'strength', label: 'FORÇA', value: props.initialData.strength },
+        { key: 'dexterity', label: 'DESTREZA', value: props.initialData.dexterity },
+        { key: 'constitution', label: 'CONSTITUIÇÃO', value: props.initialData.constitution },
+        { key: 'intelligence', label: 'INTELIGÊNCIA', value: props.initialData.intelligence },
+        { key: 'wisdom', label: 'SABEDORIA', value: props.initialData.wisdom },
+        { key: 'charisma', label: 'CARISMA', value: props.initialData.charisma },
     ];
-    const overlays = [
-        (
-            <>
-                {/* informações da ficha */}
-                <View style={[ViewSheetStyles.infoContainer, { top: '4.5%', left: '20%' }]}>
-                    <Text style={ViewSheetStyles.infoText}>{initialData.characterName}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '3.5%', left: '78%' }]}>
-                    <Text style={ViewSheetStyles.infoText}>{userInfo._user.displayName}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '3.3%', left: '43%' }]}>
-                    <Text style={ViewSheetStyles.infoText}>{initialData.characterClass}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '3.3%', left: '53%' }]}>
-                    <Text style={ViewSheetStyles.infoText}>Lv.{initialData.level}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '3.3%', left: '59.7%' }]}>
-                    <Text style={ViewSheetStyles.infoText}>{initialData.characterAntecedent}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '6.8%', left: '43%' }]}>
-                    <Text style={ViewSheetStyles.infoText}>{initialData.characterRace}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '6.8%', left: '57%' }]}>
-                    <Text style={ViewSheetStyles.infoText}>{initialData.characterTrend}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '6.8%', left: '84%' }]}>
-                    <Text style={ViewSheetStyles.infoText}>{initialData.experience}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '24%', left: '48%' }]}>
-                    <Text style={ViewSheetStyles.status}>{initialData.life}</Text>
-                </View>
-                {/* informações de statos e modificadores */}
-                <View style={[ViewSheetStyles.infoContainer, { top: '17%', left: '4.5%' }]}>
-                    <Text style={ViewSheetStyles.status}>{initialData.strength}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '20.3%', left: '6%' }]}>
-                    <Text style={ViewSheetStyles.modifierStatus}>{initialData.modStrength}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '26%', left: '4.5%' }]}>
-                    <Text style={ViewSheetStyles.status}>{initialData.dexterity}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '29.7%', left: '6%' }]}>
-                    <Text style={ViewSheetStyles.modifierStatus}>{initialData.modDexterity}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '35.5%', left: '4.5%' }]}>
-                    <Text style={ViewSheetStyles.status}>{initialData.constitution}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '39%', left: '6%' }]}>
-                    <Text style={ViewSheetStyles.modifierStatus}>{initialData.modConstitution}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '44.5%', left: '4.5%' }]}>
-                    <Text style={ViewSheetStyles.status}>{initialData.intelligence}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '48.4%', left: '6%' }]}>
-                    <Text style={ViewSheetStyles.modifierStatus}>{initialData.modIntelligence}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '54%', left: '4.5%' }]}>
-                    <Text style={ViewSheetStyles.status}>{initialData.wisdom}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '57.8%', left: '6%' }]}>
-                    <Text style={ViewSheetStyles.modifierStatus}>{initialData.modWisdom}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '63.5%', left: '4.5%' }]}>
-                    <Text style={ViewSheetStyles.status}>{initialData.charisma}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '67%', left: '6%' }]}>
-                    <Text style={ViewSheetStyles.modifierStatus}>{initialData.modCharisma}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '73.4%', left: '2.5%' }]}>
-                    <Text style={ViewSheetStyles.modifierStatus}>{initialData.modWisdom + 10}</Text>
-                </View>
-                {/* Bônus de proeficiência */}
-                <View style={[ViewSheetStyles.infoContainer, { top: '19%', left: '14.8%' }]}>
-                    <Text style={ViewSheetStyles.modifier}>{initialData.efficiencyBonus > 0 ? "+"+ initialData.efficiencyBonus : 0}</Text>
-                </View>
-                {/* Informações de Salvaguardas */}
-                <View style={[ViewSheetStyles.infoContainer, { top: '23.3%', left: '17.1%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSafeguards.includes('Força') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modStrength}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '19%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSafeguards.includes('Força') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '25%', left: '17.1%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSafeguards.includes('Destreza') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modDexterity}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '20.8%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSafeguards.includes('Destreza') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '25%', left: '17.1%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSafeguards.includes('Destreza') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modDexterity}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '20.8%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSafeguards.includes('Destreza') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '26.8%', left: '17.1%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSafeguards.includes('Constituição') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modConstitution}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '22.5%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSafeguards.includes('Constituição') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '28.6%', left: '17.1%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSafeguards.includes('Inteligencia') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modIntelligence}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '24.3%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSafeguards.includes('Inteligencia') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '28.6%', left: '17.1%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSafeguards.includes('Inteligencia') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modIntelligence}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '24.3%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSafeguards.includes('Inteligencia') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '30.3%', left: '17.1%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSafeguards.includes('Sabedoria') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modWisdom}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '26%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSafeguards.includes('Sabedoria') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '32%', left: '17.1%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSafeguards.includes('Carisma') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modCharisma}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '27.8%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSafeguards.includes('Carisma') ? '.' : ''}
-                    </Text>
-                </View>
-                {/* Informações de Pericias */}
-                <View style={[ViewSheetStyles.infoContainer, { top: '34%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSkills.includes('Acrobacia') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '38.3%', left: '17%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSkills.includes('Acrobacia') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modDexterity}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '35.78%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSkills.includes('Arcanismo') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '40%', left: '17%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSkills.includes('Arcanismo') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modIntelligence}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '37.5%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSkills.includes('Atletismo') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '41.8%', left: '17%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSkills.includes('Atletismo') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modStrength}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '39.28%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSkills.includes('Atuação') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '43.56%', left: '17%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSkills.includes('Atuação') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modCharisma}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '41%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSkills.includes('Enganação') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '45.3%', left: '17%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSkills.includes('Enganação') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modCharisma}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '42.8%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSkills.includes('Furtividade') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '47%', left: '17%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSkills.includes('Furtividade') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modDexterity}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '44.5%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSkills.includes('História') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '48.8%', left: '17%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSkills.includes('Furtividade') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modIntelligence}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '46.3%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSkills.includes('Intimidação') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '50.6%', left: '17%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSkills.includes('Intimidação') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modCharisma}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '48.06%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSkills.includes('Intuição') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '52.3%', left: '17%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSkills.includes('Intuição') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modWisdom}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '49.8%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSkills.includes('Investigação') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '54%', left: '17%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSkills.includes('Investigação') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modIntelligence}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '51.55%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSkills.includes('Lidar com Animais') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '55.8%', left: '17%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSkills.includes('Lidar com Animais') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modWisdom}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '53.3%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSkills.includes('Medicina') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '57.7%', left: '17%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSkills.includes('Medicina') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modWisdom}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '55.1%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSkills.includes('Natureza') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '59.3%', left: '17%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSkills.includes('Natureza') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modIntelligence}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '56.8%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSkills.includes('Percepção') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '61.2%', left: '17%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSkills.includes('Percepção') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modWisdom}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '58.6%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSkills.includes('Persuasão') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '62.9%', left: '17%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSkills.includes('Persuasão') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modCharisma}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '60.4%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSkills.includes('Prestidigitação(Ladinagem)') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '64.7%', left: '17%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSkills.includes('Furtividade') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modDexterity}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '62.1%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSkills.includes('Religião') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '66.4%', left: '17%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSkills.includes('Religião') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modIntelligence}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '63.9%', left: '14.1%' }]}>
-                    <Text style={ViewSheetStyles.selectedSkillss}>
-                        {initialData.selectedSkills.includes('Sobrevivência') ? '.' : ''}
-                    </Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '68.2%', left: '17%' }]}>
-                    <Text style={[
-                        ViewSheetStyles.modifier,
-                        { color: initialData.selectedSkills.includes('Sobrevivência') ? 'black' : 'gray' }
-                    ]}>
-                        {initialData.modWisdom}
-                    </Text>
-                </View>
-                {/* informações da Bolsa */}
-                <View style={[ViewSheetStyles.infoContainer, { top: '16%', left: '37%' }]}>
-                    <Text style={ViewSheetStyles.status}>{initialBag.armor}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '88.5%', left: '37.5%' }]}>
-                    <Text style={ViewSheetStyles.modifier}>{initialBag.platina}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '85%', left: '37.5%' }]}>
-                    <Text style={ViewSheetStyles.modifier}>{initialBag.gold}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '82%', left: '38.5%' }]}>
-                    <Text style={ViewSheetStyles.modifier}>{initialBag.electrum}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '78.5%', left: '37.5%' }]}>
-                    <Text style={ViewSheetStyles.modifier}>{initialBag.silver}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '75%', left: '37.5%' }]}>
-                    <Text style={ViewSheetStyles.modifier}>{initialBag.copper}</Text>
-                </View>
-                <View style={[ViewSheetStyles.infoContainer, { top: '75%', left: '45%' }]}>
-                    <Text style={ViewSheetStyles.itemsBag}>{initialBag.items}</Text>
-                </View>
-                {/* iniciativa */}
-                <View style={[ViewSheetStyles.infoContainer, { top: '16%', left: '47.5%' }]}>
-                    <Text style={ViewSheetStyles.status}>{initialData.modDexterity}</Text>
-                </View>
-                {/* Deslocamento */}
-                <View style={[ViewSheetStyles.infoContainer, { top: '16%', left: '57.5%' }]}>
-                    <Text style={ViewSheetStyles.status}>{initialData.movement}</Text>
-                </View>
-            </>
-        ),
-        (<>
-            <View style={[ViewSheetStyles.infoContainer, { top: '25%', right: '10%' }]}>
-                <Text style={ViewSheetStyles.infoText}>Outra Info P2</Text>
-            </View>
-        </>),
-        (<>
-            <View style={[ViewSheetStyles.infoContainer, { bottom: '15%', left: '30%' }]}>
-                <Text style={ViewSheetStyles.infoText}>Mais Info P3</Text>
-            </View>
-        </>),
+
+    const skills = [
+        { key: 'Acrobacia', label: 'Acrobacia (Des)', score: props.initialData.dexterity },
+        { key: 'Arcanismo', label: 'Arcanismo (Int)', score: props.initialData.intelligence },
+        { key: 'Atletismo', label: 'Atletismo (For)', score: props.initialData.strength },
+        { key: 'Atuação', label: 'Atuação (Car)', score: props.initialData.charisma },
+        { key: 'Enganação', label: 'Blefar (Car)', score: props.initialData.charisma },
+        { key: 'Furtividade', label: 'Furtividade (Des)', score: props.initialData.dexterity },
+        { key: 'História', label: 'História (Int)', score: props.initialData.intelligence },
+        { key: 'Intimidação', label: 'Intimidação (Car)', score: props.initialData.charisma },
+        { key: 'Intuição', label: 'Intuição (Sab)', score: props.initialData.wisdom },
+        { key: 'Investigação', label: 'Investigação (Int)', score: props.initialData.intelligence },
+        { key: 'Lidar com Animais', label: 'Lidar com Animais (Sab)', score: props.initialData.wisdom },
+        { key: 'Medicina', label: 'Medicina (Sab)', score: props.initialData.wisdom },
+        { key: 'Natureza', label: 'Natureza (Int)', score: props.initialData.intelligence },
+        { key: 'Percepção', label: 'Percepção (Sab)', score: props.initialData.wisdom },
+        { key: 'Persuasão', label: 'Persuasão (Car)', score: props.initialData.charisma },
+        { key: 'Prestidigitação', label: 'Prestidigitação (Des)', score: props.initialData.dexterity },
+        { key: 'Religião', label: 'Religião (Int)', score: props.initialData.intelligence },
+        { key: 'Sobrevivência', label: 'Sobrevivência (Sab)', score: props.initialData.wisdom },
     ];
+
+    const savingThrows = [
+        { name: 'Força', value: props.initialData.strength },
+        { name: 'Destreza', value: props.initialData.dexterity },
+        { name: 'Constituição', value: props.initialData.constitution },
+        { name: 'Inteligência', value: props.initialData.intelligence },
+        { name: 'Sabedoria', value: props.initialData.wisdom },
+        { name: 'Carisma', value: props.initialData.charisma },
+    ];
+
+    // --- PÁGINA 1 ---
+    const renderPage1 = () => (
+        <View style={commonStyles.pageContent}>
+            <View style={[commonStyles.headerP1, isSmall && commonStyles.headerStack]}>
+                <View style={[commonStyles.nameColumn, isSmall && commonStyles.fullWidth]}>
+                    <Text style={commonStyles.charNameText}>{props.initialData.characterName}</Text>
+                    <Text style={commonStyles.headerLabel}>NOME DO PERSONAGEM</Text>
+                </View>
+                <View style={[commonStyles.infoColumn, isSmall && commonStyles.fullWidth]}>
+                    <View style={commonStyles.headerRow}>
+                        <View style={commonStyles.headerField}><Text style={commonStyles.headerValue}>{props.initialData.characterClass} {props.initialData.level}</Text><Text style={commonStyles.headerLabel}>CLASSE E NÍVEL</Text></View>
+                        <View style={commonStyles.headerField}><Text style={commonStyles.headerValue}>{props.initialData.characterAntecedent}</Text><Text style={commonStyles.headerLabel}>ANTECEDENTE</Text></View>
+                        <View style={commonStyles.headerField}><Text style={commonStyles.headerValue}>{props.userInfo._user.displayName}</Text><Text style={commonStyles.headerLabel}>NOME DO JOGADOR</Text></View>
+                    </View>
+                    <View style={commonStyles.headerRow}>
+                        <View style={commonStyles.headerField}><Text style={commonStyles.headerValue}>{props.initialData.characterRace}</Text><Text style={commonStyles.headerLabel}>RAÇA</Text></View>
+                        <View style={commonStyles.headerField}><Text style={commonStyles.headerValue}>{props.initialData.characterTrend}</Text><Text style={commonStyles.headerLabel}>TENDÊNCIA</Text></View>
+                        <View style={commonStyles.headerField}><Text style={commonStyles.headerValue}>{props.initialData.experience}</Text><Text style={commonStyles.headerLabel}>XP</Text></View>
+                    </View>
+                </View>
+            </View>
+
+            <View style={[commonStyles.mainGrid, { alignItems: 'stretch' }, isSmall && commonStyles.mainGridStack]}>
+
+                {/* COLUNA 1: ATRIBUTOS + PERÍCIAS (CONTAINER) */}
+                <View style={[page1Styles.leftColumnPanel, { flexDirection: 'column' }, isSmall && commonStyles.fullWidth]}>
+
+                    {/* Linha Superior: Atributos | Perícias */}
+                    <View style={{ flexDirection: 'row', gap: 2 }}>
+                        {/* Atributos */}
+                        <View style={page1Styles.attributesStrip}>
+                            {attributes.map((attr, index) => (
+                                <View key={index} style={page1Styles.attributeContainer}>
+                                    <View style={page1Styles.attributeLabelBox}><Text style={page1Styles.attrLabelText}>{attr.label}</Text></View>
+                                    <Text style={page1Styles.attrModText}>{formatModifier(calculateModifier(attr.value))}</Text>
+                                    <View style={page1Styles.attrScoreCircle}><Text style={page1Styles.attrScoreText}>{attr.value}</Text></View>
+                                </View>
+                            ))}
+                        </View>
+
+                        {/* Painel Skills */}
+                        <View style={page1Styles.skillsPanel}>
+                            <View style={page1Styles.rowBox}>
+                                <View style={page1Styles.inspirationBox}>
+                                    <View style={page1Styles.profCircle}>
+                                        <Text style={page1Styles.profText}>
+                                            0
+                                        </Text>
+                                    </View>
+                                    <Text style={commonStyles.headerLabel}>
+                                        INSPIRAÇÃO
+                                    </Text>
+                                </View>
+                                <View style={page1Styles.profBox}>
+                                    <View style={page1Styles.profCircle}>
+                                        <Text style={page1Styles.profText}>
+                                            +{character.proficiencyBonus}
+                                        </Text>
+                                    </View>
+                                    <Text style={commonStyles.headerLabel}>
+                                        BÔNUS DE PROEF.
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <View style={page1Styles.borderBox}>
+                                {savingThrows.map((save, index) => (
+                                    <View key={index} style={page1Styles.skillLine}>
+                                        <View style={[page1Styles.radioEmpty, { backgroundColor: selectedSafeguards.includes(save.name) ? '#000' : 'transparent' }]} />
+                                        <Text style={page1Styles.skillModSmall}>{formatModifier(calculateModifier(save.value))}</Text>
+                                        <Text style={[page1Styles.skillText, { fontWeight: selectedSafeguards.includes(save.name) ? 'bold' : 'normal' }]}>{save.name}</Text>
+                                    </View>
+                                ))}
+                                <Text style={page1Styles.boxTitle}>SALVAGUARDAS</Text>
+                            </View>
+
+                            <View style={page1Styles.borderBox}>
+                                {skills.map((skill, index) => (
+                                    <View key={index} style={page1Styles.skillLine}>
+                                        <View style={[page1Styles.radioEmpty, { backgroundColor: selectedSkills.includes(skill.key) ? '#000' : 'transparent' }]} />
+                                        <Text style={page1Styles.skillModSmall}>{formatModifier(calculateModifier(skill.score))}</Text>
+                                        <Text style={[page1Styles.skillText, { fontWeight: selectedSkills.includes(skill.key) ? 'bold' : 'normal' }]}>{skill.label}</Text>
+                                    </View>
+                                ))}
+                                <Text style={page1Styles.boxTitle}>PERÍCIAS</Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Itens Inferiores da Coluna 1 */}
+                    <View style={page1Styles.passiveBoxRow}>
+                        <Text style={page1Styles.passiveVal}>{10 + calculateModifier(props.initialData.wisdom)}</Text>
+                        <Text style={page1Styles.passiveLabel}>SABEDORIA PASSIVA (PERCEPÇÃO)</Text>
+                    </View>
+
+                    <View style={[page1Styles.borderBox, { minHeight: 100 }]}>
+                        <Text style={[page1Styles.textAreaSmall, { flex: 1 }]}>ALGUMA INFORMAÇÃO</Text>
+                        <Text style={page1Styles.boxTitle}>OUTRAS PROFICIÊNCIAS E IDIOMAS</Text>
+                    </View>
+                </View>
+
+                {/* COLUNA 2 */}
+                <View style={[page1Styles.centerColumnPanel, isSmall && commonStyles.fullWidth]}>
+                    <View style={page1Styles.combatStatsRow}>
+                        <View style={page1Styles.shieldBox}>
+                            <Text style={page1Styles.shieldVal}>{props.initialBag.armor}</Text>
+                            <Text style={page1Styles.boxTitle}>CLASSE DE ARMADURA</Text>
+                        </View>
+                        <View style={page1Styles.squareStatBox}>
+                            <Text style={page1Styles.shieldVal}>{formatModifier(calculateModifier(props.initialData.dexterity))}</Text>
+                            <Text style={page1Styles.boxTitle}>INICIATIVA</Text>
+                        </View>
+                        <View style={page1Styles.squareStatBox}><Text style={page1Styles.shieldVal}>{props.initialData.movement}</Text>
+                            <Text style={page1Styles.boxTitle}>DESLOC.</Text>
+                        </View>
+                    </View>
+                    <View style={page1Styles.hpContainer}>
+                        <View style={[page1Styles.hpHeader]}>
+                            <View style={page1Styles.hpMax}>
+                                <Text style={page1Styles.boxTitle}>PONTOS DE VIDA MÁXIMOS</Text>
+                                <Text style={page1Styles.hpInputBig}>{props.initialData.life}</Text>
+                            </View>
+                            <View style={page1Styles.hpNow}>
+                                <TextInput style={commonStyles.textArea} keyboardType='numeric' />
+                                <Text style={page1Styles.boxTitle}>PONTOS DE VIDA ATUAIS</Text>
+                            </View>
+                        </View>
+
+                    </View>
+                    <View style={[page1Styles.borderBox, { minHeight: 50 }]}>
+                        <TextInput style={page1Styles.hpTemp} keyboardType='numeric' />
+                        <Text style={page1Styles.boxTitle}>PONTOS DE VIDA TEMPORÁRIOS</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', height: 60 }}>
+                        <View style={[page1Styles.borderBox, { flex: 0.47 }]}>
+                            <Text style={page1Styles.boxTitle}>DADOS DE VIDA</Text>
+                            <Text style={{ flex: 1, color: "black", textAlign: "center", textAlignVertical: "center" }}>1d8</Text>
+                        </View>
+                        <View style={[page1Styles.borderBox, { flex: 0.47, justifyContent: "space-between" }]}>
+                            <View style={{ flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: "space-between", marginTop: 5}}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 0.5, gap: 2, justifyContent: 'space-between' }}>
+                                    <Text style={{ fontSize: 5, color: "black", textAlign:"left" }}>SUCESSOS</Text>
+                                    <View style={{ flexDirection: 'row' }}>
+                                        <View style={page1Styles.radioEmpty} />
+                                        <View style={page1Styles.radioEmpty} />
+                                        <View style={page1Styles.radioEmpty} />
+                                    </View>
+                                </View>
+                                <View>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 0.5, gap: 2, justifyContent: 'space-between' }}>
+                                        <Text style={{ fontSize: 5, color: "black", textAlign:"left" }}>FALHAS</Text>
+                                        <View style={{ flexDirection: 'row' }}>
+                                            <View style={page1Styles.radioEmpty} />
+                                            <View style={page1Styles.radioEmpty} />
+                                            <View style={page1Styles.radioEmpty} />
+                                        </View>
+                                    </View>
+                                </View>
+                            </View>
+                            <Text style={{ fontSize: 4, color: "black" }}>SALVAGUARDA CONTRA MORTE</Text>
+                        </View>
+                    </View>
+                    <View style={[page1Styles.borderBox, { flex: 0.5, minHeight: 100 }]}>
+                        <View style={{ flex: 1, padding: 2 }}>
+                            <Text style={{ color: "black", fontSize: 10 }}>alguma informação</Text>
+                        </View>
+                        <Text style={{ textAlign: "center", width: "100%", fontSize: 6, color: "black", fontWeight: 'bold' }}>
+                            ATAQUES & CONJURAÇÕES
+                        </Text>
+                    </View>
+                    <View style={[page1Styles.borderBox, { flex: 1 }]}>
+                        <View style={{ flex: 1, flexDirection: "row", gap: 5 }}>
+
+                            {/* Lado das Moedas */}
+                            <View style={{ width: 33, paddingTop: 5 }}>
+                                {['PC', 'PP', 'PE', 'PO', 'PL'].map((label, index) => {
+                                    const values = [props.initialBag.copper, props.initialBag.silver, props.initialBag.electrum, props.initialBag.gold, props.initialBag.platina];
+                                    return (
+                                        <View key={label} style={{ flexDirection: "row", alignItems: "center", marginBottom: 2, marginLeft: -4 }}>
+                                            <Text style={[page1Styles.borderBox, { color: "black", fontSize: 5, backgroundColor: "white", textAlign: "center", width: 16, marginBottom: 0 }]}>{label}</Text>
+                                            <View style={[page1Styles.borderBox, { width: 22, height: 18, justifyContent: "center", alignItems: "center", marginBottom: 0, marginLeft: 2 }]}>
+                                                <Text style={{ color: "black", fontSize: 10 }}>{values[index]}</Text>
+                                            </View>
+                                        </View>
+                                    );
+                                })}
+                            </View>
+                            <View style={{ flex: 1}}>
+                                <View style={{ flex: 1, paddingBottom: 2 }}>
+                                    <ScrollView
+                                        nestedScrollEnabled={true}
+                                        style={{ flex: 1, width: '100%' }}
+                                        contentContainerStyle={{ flexGrow: 1 }}
+                                    >
+                                        <Text style={{ fontSize: 8, color: "black", padding: 4 }}>
+                                            {props.initialBag.items}
+                                        </Text>
+                                    </ScrollView>
+                                </View>
+                            </View>
+                        </View>
+                        <Text style={page1Styles.boxTitle}>EQUIPAMENTO</Text>
+                    </View>
+                </View>
+
+                {/* COLUNA 3 */}
+                <View style={[page1Styles.rightColumnPanel, isSmall && commonStyles.fullWidth]}>
+                    <View style={[page1Styles.borderBox, { minHeight: 60 }]}><Text style={page1Styles.boxTitle}>TRAÇOS DE PERSONALIDADE</Text></View>
+                    <View style={[page1Styles.borderBox, { minHeight: 60 }]}><Text style={page1Styles.boxTitle}>IDEAIS</Text></View>
+                    <View style={[page1Styles.borderBox, { minHeight: 60 }]}><Text style={page1Styles.boxTitle}>LIGAÇÕES</Text></View>
+                    <View style={[page1Styles.borderBox, { minHeight: 60 }]}><Text style={page1Styles.boxTitle}>DEFEITOS</Text></View>
+                    <View style={[page1Styles.borderBox, { flex: 1 }]}><Text style={page1Styles.boxTitle}>CARACTERÍSTICAS E HABILIDADES</Text></View>
+                </View>
+            </View>
+        </View>
+    );
+
+    // --- PÁGINA 2: DETALHES ---
+    const renderPage2 = () => (
+        <View style={commonStyles.pageContent}>
+            <View style={commonStyles.headerP2}>
+                <View style={commonStyles.nameColumn}>
+                    <Text style={commonStyles.charNameText}>{props.initialData.characterName}</Text>
+                    <Text style={commonStyles.headerLabel}>NOME DO PERSONAGEM</Text>
+                </View>
+                <View style={commonStyles.infoColumn}>
+                    <View style={commonStyles.headerRow}>
+                        <View style={commonStyles.headerField}><TextInput style={commonStyles.tinyInput} /><Text style={commonStyles.headerLabel}>IDADE</Text></View>
+                        <View style={commonStyles.headerField}><TextInput style={commonStyles.tinyInput} /><Text style={commonStyles.headerLabel}>ALTURA</Text></View>
+                        <View style={commonStyles.headerField}><TextInput style={commonStyles.tinyInput} /><Text style={commonStyles.headerLabel}>PESO</Text></View>
+                    </View>
+                    <View style={commonStyles.headerRow}>
+                        <View style={commonStyles.headerField}><TextInput style={commonStyles.tinyInput} /><Text style={commonStyles.headerLabel}>OLHOS</Text></View>
+                        <View style={commonStyles.headerField}><TextInput style={commonStyles.tinyInput} /><Text style={commonStyles.headerLabel}>PELE</Text></View>
+                        <View style={commonStyles.headerField}><TextInput style={commonStyles.tinyInput} /><Text style={commonStyles.headerLabel}>CABELOS</Text></View>
+                    </View>
+                </View>
+            </View>
+
+            <View style={[commonStyles.mainGrid, isSmall && commonStyles.mainGridStack]}>
+                <View style={[commonStyles.columnOne, isSmall && commonStyles.fullWidth]}>
+                    <View style={page2Styles.imgBox}><Text style={{ fontSize: 10, color: '#ccc' }}>IMAGEM</Text></View>
+                    <View style={[commonStyles.borderBox, { flex: 1, minHeight: 150 }]}>
+                        <TextInput style={commonStyles.textArea} multiline placeholder="Aparência..." />
+                        <Text style={commonStyles.boxTitle}>APARÊNCIA DO PERSONAGEM</Text>
+                    </View>
+                </View>
+                <View style={[commonStyles.columnTwo, isSmall && commonStyles.fullWidth]}>
+                    <View style={[commonStyles.borderBox, { minHeight: 150 }]}>
+                        <TextInput style={commonStyles.textArea} multiline placeholder="Aliados..." />
+                        <Text style={commonStyles.boxTitle}>ALIADOS E ORGANIZAÇÕES</Text>
+                    </View>
+                    <View style={[commonStyles.borderBox, { flex: 1, minHeight: 200 }]}>
+                        <TextInput style={commonStyles.textArea} multiline placeholder="História..." />
+                        <Text style={commonStyles.boxTitle}>HISTÓRIA DO PERSONAGEM</Text>
+                    </View>
+                </View>
+                <View style={[commonStyles.columnThree, isSmall && commonStyles.fullWidth]}>
+                    <View style={[commonStyles.borderBox, { minHeight: 200 }]}>
+                        <TextInput style={commonStyles.textArea} multiline placeholder="Outras características..." />
+                        <Text style={commonStyles.boxTitle}>OUTRAS CARACTERÍSTICAS</Text>
+                    </View>
+                    <View style={[commonStyles.borderBox, { flex: 1, minHeight: 150 }]}>
+                        <TextInput style={commonStyles.textArea} multiline placeholder="Tesouros..." />
+                        <Text style={commonStyles.boxTitle}>TESOURO</Text>
+                    </View>
+                </View>
+            </View>
+        </View>
+    );
+
+    // --- PÁGINA 3: MAGIAS ---
+    const renderPage3 = () => (
+        <View style={commonStyles.pageContent}>
+            <View style={page3Styles.spellHeaderContainer}>
+                <View style={page3Styles.spellHeaderBlock}>
+                    <TextInput style={page3Styles.headerValueInput} />
+                    <Text style={page3Styles.headerLabel}>CLASSE DE CONJURADOR</Text>
+                </View>
+                <View style={page3Styles.spellHeaderRow}>
+                    <View style={page3Styles.spellStatBox}><TextInput style={page3Styles.headerValueInput} /><Text style={page3Styles.headerLabel}>HABILIDADE CHAVE</Text></View>
+                    <View style={page3Styles.spellStatBox}><TextInput style={page3Styles.headerValueInput} keyboardType="numeric" /><Text style={page3Styles.headerLabel}>CD DO TR</Text></View>
+                    <View style={page3Styles.spellStatBox}><TextInput style={page3Styles.headerValueInput} /><Text style={page3Styles.headerLabel}>BÔNUS DE ATAQUE</Text></View>
+                </View>
+            </View>
+
+            <View style={[commonStyles.mainGrid, isSmall && commonStyles.mainGridStack]}>
+                <View style={[commonStyles.columnOne, isSmall && commonStyles.fullWidth]}>
+                    <View style={page3Styles.spellLevelBox}>
+                        <View style={page3Styles.levelHeader}><Text style={page3Styles.levelTitle}>0 - TRUQUES</Text></View>
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <TextInput key={i} style={page3Styles.spellLine} />)}
+                    </View>
+                    {[1, 2].map(level => (
+                        <View key={level} style={page3Styles.spellLevelBox}>
+                            <View style={page3Styles.levelHeader}>
+                                <Text style={page3Styles.levelTitle}>{level}</Text>
+                                <View style={page3Styles.slotsBox}><TextInput style={page3Styles.slotInput} placeholder="Total" /><TextInput style={page3Styles.slotInput} placeholder="Usados" /></View>
+                            </View>
+                            {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                                <View key={i} style={{ flexDirection: 'row', alignItems: 'center' }}><View style={page3Styles.radioEmpty} /><TextInput style={page3Styles.spellLine} /></View>
+                            ))}
+                        </View>
+                    ))}
+                </View>
+
+                <View style={[commonStyles.columnTwo, isSmall && commonStyles.fullWidth]}>
+                    {[3, 4, 5].map(level => (
+                        <View key={level} style={page3Styles.spellLevelBox}>
+                            <View style={page3Styles.levelHeader}>
+                                <Text style={page3Styles.levelTitle}>{level}</Text>
+                                <View style={page3Styles.slotsBox}><TextInput style={page3Styles.slotInput} placeholder="Total" /><TextInput style={page3Styles.slotInput} placeholder="Usados" /></View>
+                            </View>
+                            {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                                <View key={i} style={{ flexDirection: 'row', alignItems: 'center' }}><View style={page3Styles.radioEmpty} /><TextInput style={page3Styles.spellLine} /></View>
+                            ))}
+                        </View>
+                    ))}
+                </View>
+
+                <View style={[commonStyles.columnThree, isSmall && commonStyles.fullWidth]}>
+                    {[6, 7, 8, 9].map(level => (
+                        <View key={level} style={page3Styles.spellLevelBox}>
+                            <View style={page3Styles.levelHeader}>
+                                <Text style={page3Styles.levelTitle}>{level}</Text>
+                                <View style={page3Styles.slotsBox}><TextInput style={page3Styles.slotInput} placeholder="Total" /><TextInput style={page3Styles.slotInput} placeholder="Usados" /></View>
+                            </View>
+                            {[1, 2, 3, 4, 5].map(i => (
+                                <View key={i} style={{ flexDirection: 'row', alignItems: 'center' }}><View style={page3Styles.radioEmpty} /><TextInput style={page3Styles.spellLine} /></View>
+                            ))}
+                        </View>
+                    ))}
+                </View>
+            </View>
+        </View>
+    );
 
     return (
-        <Modal visible={true} transparent={true} onRequestClose={onClose}>
-            <ImageViewer
-                imageUrls={imageUrls}
-                onCancel={onClose}
-                enableSwipeDown={true}
-                backgroundColor={'#000'}
-                index={currentIndex}
-                onChange={(index) => {
-                    if (index !== undefined) {
-                        setCurrentIndex(index);
-                    }
-                }}
-                renderImage={(props) => (
-                    <ImageBackground {...props}>
-                        {overlays[currentIndex]}
-                    </ImageBackground>
-                )}
-            />
-            <View style={ViewSheetStyles.containerDoBotao}>
-                <Button title="Fechar" onPress={onClose} color="#b30202" />
+        <Modal visible={true} transparent={true} onRequestClose={props.onClose}>
+            <View style={commonStyles.container}>
+                <View style={commonStyles.navigation}>
+                    <View style={commonStyles.navGroup}>
+                        {[1, 2, 3].map(pageNum => (
+                            <TouchableOpacity
+                                key={pageNum}
+                                style={[commonStyles.navButton, currentPage === pageNum && commonStyles.navButtonActive]}
+                                onPress={() => setCurrentPage(pageNum)}
+                            >
+                                <Text style={[commonStyles.navButtonText, currentPage === pageNum && commonStyles.navButtonTextActive]}>
+                                    {pageNum === 3 ? "Magias" : `Pág ${pageNum}`}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                    <TouchableOpacity style={commonStyles.closeButton} onPress={props.onClose}>
+                        <Text style={commonStyles.closeButtonText}>Fechar X</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <ScrollView style={commonStyles.scrollView} contentContainerStyle={{ flexGrow: 1 }}>
+                    {currentPage === 1 && renderPage1()}
+                    {currentPage === 2 && renderPage2()}
+                    {currentPage === 3 && renderPage3()}
+                </ScrollView>
             </View>
         </Modal>
     );
-};
+}
 
+// =========================================================================
+// ESTILOS SEPARADOS POR PÁGINA
+// =========================================================================
 
-export default ViewSheet;
+// 1. ESTILOS COMUNS
+const commonStyles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
+    scrollView: { flex: 1, backgroundColor: '#fff', margin: 10, borderRadius: 8, overflow: 'hidden' },
+    pageContent: { padding: 10, paddingBottom: 40 },
+
+    // Header & Nav
+    navigation: { flexDirection: 'row', backgroundColor: '#fff', padding: 10, justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderColor: '#ccc', marginHorizontal: 10, marginTop: 10, borderTopLeftRadius: 8, borderTopRightRadius: 8 },
+    navGroup: { flexDirection: 'row', gap: 5 },
+    navButton: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 4, backgroundColor: '#f0f0f0', borderWidth: 1, borderColor: '#ccc' },
+    navButtonActive: { backgroundColor: '#333', borderColor: '#000' },
+    navButtonText: { fontSize: 10, fontWeight: 'bold', color: '#333' },
+    navButtonTextActive: { color: '#fff' },
+    closeButton: { backgroundColor: '#b30202', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 4 },
+    closeButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 10 },
+
+    headerP1: { flexDirection: 'row', marginBottom: 10, gap: 5, minHeight: 60 },
+    headerP2: { flexDirection: 'row', marginBottom: 10, gap: 5, minHeight: 60 },
+    headerStack: { flexDirection: 'row' },
+    nameColumn: { flex: 0.35, backgroundColor: '#f5f5f5', borderRadius: 5, padding: 5, justifyContent: 'flex-end', borderBottomWidth: 2, borderColor: '#444' },
+    charNameText: { fontSize: 16, fontWeight: 'bold', color: '#000' },
+    infoColumn: { flex: 0.65, justifyContent: 'space-between', gap: 5 },
+    headerRow: { flexDirection: 'row', gap: 5 },
+    headerRowStack: { flexDirection: 'column' },
+    headerField: { flex: 1, borderBottomWidth: 1, borderColor: '#ccc', paddingBottom: 1, justifyContent: 'flex-end' },
+    headerValue: { fontSize: 10, fontWeight: 'bold', color: '#000' },
+    headerLabel: { fontSize: 6, color: '#666', fontWeight: 'bold', textTransform: 'uppercase' },
+    fullWidth: { width: '100%', marginBottom: 5 },
+
+    // Grid Layout
+    mainGrid: { flexDirection: 'row', gap: 5, alignItems: 'stretch' },
+    mainGridStack: { flexDirection: 'column' },
+    columnOne: { flex: 1, gap: 5 },
+    columnTwo: { flex: 1, gap: 5 },
+    columnThree: { flex: 1, gap: 5 },
+
+    // Boxes & Inputs
+    borderBox: { borderWidth: 1, borderRadius: 5, padding: 2, marginBottom: 2, borderColor: '#333' },
+    boxTitle: { fontSize: 6, fontWeight: 'bold', textAlign: 'center', marginTop: 1, color: '#666', textTransform: 'uppercase' },
+    textArea: { flex: 1, textAlignVertical: 'top', fontSize: 16, padding: 2, color: '#000' },
+    tinyInput: { flex: 1, fontSize: 8, borderBottomWidth: 1, borderColor: '#eee', height: 15, padding: 0, textAlign: 'center', color: '#000' },
+});
+
+// 2. ESTILOS PÁGINA 1
+const page1Styles = StyleSheet.create({
+    leftColumnPanel: { flex: 0.39, flexDirection: 'row', gap: 2 },
+    centerColumnPanel: { flex: 0.34, gap: 2 },
+    rightColumnPanel: { flex: 0.25, gap: 2 },
+
+    attributesStrip: { width: 50, alignItems: 'center', justifyContent: 'space-between' },
+    attributeContainer: { alignItems: 'center', marginBottom: 5, width: 45, height: 55, borderWidth: 1, borderRadius: 5, borderColor: '#333', backgroundColor: '#fff' },
+    attributeLabelBox: { backgroundColor: '#eee', width: '100%', alignItems: 'center', borderTopLeftRadius: 4, borderTopRightRadius: 4, paddingVertical: 1 },
+    attrLabelText: { fontSize: 6, fontWeight: 'bold', color: '#000' },
+    attrModText: { fontSize: 18, fontWeight: 'bold', marginVertical: 0, color: '#000' },
+    attrScoreCircle: { position: 'absolute', bottom: -7, backgroundColor: '#fff', borderWidth: 1, borderRadius: 10, width: 30, height: 20, alignItems: 'center', justifyContent: 'center' },
+    attrScoreText: { fontSize: 14, color: '#000' },
+
+    skillsPanel: { flex: 1 },
+    rowBox: { flexDirection: 'column', gap: 2, marginBottom: 2, height: 50 },
+    inspirationBox: { borderWidth: 1, borderRadius: 5, height: 30, flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 2, borderColor: '#333' },
+    profBox: { borderWidth: 1, borderRadius: 5, height: 30, flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 2, borderColor: '#333' },
+    profCircle: { borderWidth: 1, borderRadius: 10, width: 18, height: 18, justifyContent: 'center', alignItems: 'center', marginRight: 2, borderColor: '#333' },
+    profText: { fontSize: 8, fontWeight: 'bold', color: '#000' },
+
+    borderBox: { borderWidth: 1, borderRadius: 5, padding: 2, marginBottom: 2, borderColor: '#333' },
+    skillLine: { flexDirection: 'row', alignItems: 'center', marginBottom: 1 },
+    radioEmpty: { width: 6, height: 6, borderRadius: 3, borderWidth: 1, marginRight: 2, borderColor: '#333' },
+    skillModSmall: { fontSize: 8, width: 12, textAlign: 'center', marginRight: 2, borderBottomWidth: 1, borderColor: '#ccc', color: '#000' },
+    skillText: { fontSize: 6, flex: 1, flexWrap: 'wrap', color: '#000' },
+    expertiseText: { fontSize: 6, flex: 1, flexWrap: 'wrap', color: '#000' },
+    boxTitle: { fontSize: 5, fontWeight: 'bold', textAlign: 'center', marginTop: 1, color: '#666', textTransform: 'uppercase' },
+
+    // --- ITENS ADICIONADOS PARA SABEDORIA PASSIVA E IDIOMAS ---
+    passiveBoxRow: { flexDirection: 'row', borderWidth: 1, borderRadius: 15, padding: 2, alignItems: 'center', height: 30, borderColor: '#333', marginBottom: 5, marginTop: 5 },
+    passiveVal: { fontSize: 12, fontWeight: 'bold', marginRight: 8, marginLeft: 8, color: '#000' },
+    passiveLabel: { fontSize: 7, color: '#666', flex: 1, fontWeight: 'bold' },
+    textAreaSmall: { flex: 1, textAlignVertical: 'top', fontSize: 8, padding: 2, color: '#000' },
+    // ----------------------------------------------------------
+
+    combatStatsRow: { flexDirection: 'row', justifyContent: 'space-between', height: 50 },
+    shieldBox: { flex: 1, borderWidth: 2, borderBottomLeftRadius: 25, borderBottomRightRadius: 25, alignItems: 'center', justifyContent: 'center', marginHorizontal: 1, borderColor: '#333' },
+    squareStatBox: { flex: 1, borderWidth: 2, borderRadius: 5, alignItems: 'center', justifyContent: 'center', marginHorizontal: 1, borderColor: '#333' },
+    shieldVal: { fontSize: 16, fontWeight: 'bold', color: '#000' },
+
+    hpContainer: { borderWidth: 1, borderRadius: 5, padding: 2, minHeight: 70, alignItems: 'center', borderColor: '#333', justifyContent: 'space-between' },
+    hpHeader: { width: '100%', flexDirection: 'column', justifyContent: 'space-between', paddingHorizontal: 5, flex: 1 },
+    hpMax: { justifyContent: 'space-between', flexDirection: 'row', width: '100%', alignItems: 'center' },
+    hpNow: { justifyContent: "flex-end", textAlign: 'center', flexDirection: 'column', height: '50%', width: '100%', alignItems: 'center' },
+    hpTemp: { flex: 1, textAlign: 'center', padding: 2, color: '#000', height: '50%', fontSize: 12 },
+    hpInputBig: { fontSize: 14, fontWeight: 'bold', color: '#000' },
+
+    atkRow: { flexDirection: 'row', backgroundColor: '#eee', padding: 1 },
+    atkRowInput: { flexDirection: 'row', marginBottom: 1 },
+    tinyInput: { flex: 1, fontSize: 8, borderBottomWidth: 1, borderColor: '#eee', height: 15, padding: 0, textAlign: 'center', color: '#000' },
+
+    coinsColumn: { width: 30, alignItems: 'center', borderRightWidth: 1, borderColor: '#ccc', justifyContent: 'space-around' },
+    coinLabel: { fontSize: 6, fontWeight: 'bold', textAlign: 'center', color: '#666' },
+    coinInput: { fontSize: 8, textAlign: 'center', borderBottomWidth: 1, width: 20, height: 12, marginBottom: 2, color: '#000' },
+    equipmentText: { fontSize: 7, textAlignVertical: 'top', color: '#000', flex: 1 },
+
+    traitContainer: { borderWidth: 1, borderRadius: 5, padding: 3, minHeight: 40, borderColor: '#333' },
+    traitLabel: { fontSize: 6, fontWeight: 'bold', color: '#000' },
+});
+
+// 3. ESTILOS PÁGINA 2
+const page2Styles = StyleSheet.create({
+    imgBox: { height: 150, borderWidth: 2, borderColor: '#ccc', borderRadius: 5, marginBottom: 5, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9f9f9' },
+});
+
+// 4. ESTILOS PÁGINA 3
+const page3Styles = StyleSheet.create({
+    spellHeaderContainer: { borderWidth: 2, borderColor: '#333', borderRadius: 8, padding: 5, marginBottom: 10, backgroundColor: '#f5f5f5' },
+    spellHeaderBlock: { borderBottomWidth: 1, borderColor: '#ccc', marginBottom: 5, alignItems: 'center' },
+    spellHeaderRow: { flexDirection: 'row', justifyContent: 'space-around' },
+    spellStatBox: { alignItems: 'center', width: '30%' },
+    headerValueInput: { fontSize: 12, fontWeight: 'bold', color: '#000', textAlign: 'center', width: '100%', padding: 0 },
+    headerLabel: { fontSize: 6, color: '#666', fontWeight: 'bold', textTransform: 'uppercase' },
+
+    spellLevelBox: { borderWidth: 1, borderColor: '#333', borderRadius: 5, marginBottom: 10, overflow: 'hidden' },
+    levelHeader: { flexDirection: 'row', backgroundColor: '#eee', padding: 2, alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderColor: '#ccc' },
+    levelTitle: { fontSize: 14, fontWeight: 'bold', marginLeft: 5, color: '#000' },
+    slotsBox: { flexDirection: 'row', gap: 5 },
+    slotInput: { backgroundColor: '#fff', width: 40, height: 20, fontSize: 8, textAlign: 'center', borderWidth: 1, borderColor: '#ccc', borderRadius: 3, color: '#000' },
+    spellLine: { borderBottomWidth: 1, borderColor: '#eee', height: 20, flex: 1, marginLeft: 2, fontSize: 9, padding: 0, color: '#000' },
+    radioEmpty: { width: 6, height: 6, borderRadius: 3, borderWidth: 1, marginRight: 2, borderColor: '#333' },
+});
