@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #14171c;
+    --foreground: #f8fafc;
+    --card: #181b20;
+    --card-foreground: #f8fafc;
+    --popover: #020817;
+    --popover-foreground: #f8fafc;
+    --primary: #f8fafc;
+    --primary-foreground: #0f172a;
+    --secondary: #1e293b;
+    --secondary-foreground: #f8fafc;
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+    --accent: #1e293b;
+    --accent-foreground: #f8fafc;
+    --destructive: #7f1d1d;
+    --destructive-foreground: #f8fafc;
+    --text-primary: #E8DCC8;
+    --text-secondary: #9a8b73;
+    --border: #1e293b;
+    --input: #1e293b;
+    --ring: #cbd5e1;
+    --dark-gold:#8B6914;
+    --light-gold: #D4AF61;
+    --gold: #C49A4A;
+    --button-bg: #B08A3E;
+    --button-text: #1A1610;
+  }
+  /* gold: {
+          DEFAULT: '#C49A4A',
+          light: '#D4AF61',
+          dark: '#8B6914',
+        },
+        dnd: {
+          bg: '#14171c',
+          card: '#181b20',
+          button: '#B08A3E',
+          text: '#E8DCC8',
+          textSecondary: '#9A8B73',
+          buttonText: '#1A1610',
+        }, */
+
+  .dark {
+    --background: #020817;
+    --foreground: #f8fafc;
+    --card: #020817;
+    --card-foreground: #f8fafc;
+    --popover: #020817;
+    --popover-foreground: #f8fafc;
+    --primary: #f8fafc;
+    --primary-foreground: #0f172a;
+    --secondary: #1e293b;
+    --secondary-foreground: #f8fafc;
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+    --accent: #1e293b;
+    --accent-foreground: #f8fafc;
+    --destructive: #7f1d1d;
+    --destructive-foreground: #f8fafc;
+    --border: #1e293b;
+    --input: #1e293b;
+    --ring: #cbd5e1;
+  }
+}
