@@ -9,6 +9,7 @@ import CreatEditCaracter from "@/components/CreatEditCaracter";
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from "@react-navigation/native";
+import LevelEdit from "@/components/LevelUp";
 
 
 // Habilita o uso de className no SvgXml mapeando as classes para a prop 'style'
@@ -16,7 +17,7 @@ cssInterop(SvgXml, {
     className: 'style',
 });
 
-export default function HomePlayer({onPressLevel}: any) {
+export default function HomePlayer({ onPressLevel }: any) {
     const swordIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-swords-icon lucide-swords"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" x2="19" y1="19" y2="13"/><line x1="16" x2="20" y1="16" y2="20"/><line x1="19" x2="21" y1="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" x2="9" y1="14" y2="18"/><line x1="7" x2="4" y1="17" y2="20"/><line x1="3" x2="5" y1="19" y2="21"/></svg>`
     const bookIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-open-text-icon lucide-book-open-text"><path d="M12 7v14"/><path d="M16 12h2"/><path d="M16 8h2"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/><path d="M6 12h2"/><path d="M6 8h2"/></svg>`
     const deleteIconXml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`
@@ -24,39 +25,43 @@ export default function HomePlayer({onPressLevel}: any) {
     const profileXml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
 
     const [isModalVisible, setModalVisible] = useState(false);
+    const [isXpModalVisible, setXpModalVisible] = useState(false);
     const [characters, setCharacters] = useState<any[]>([]);
     const [editingCharacter, setEditingCharacter] = useState<any>(null);
+    const [editingXpLevel, setEditingXpLevel] = useState<any>(null);
 
-    // Busca os personagens em tempo real no banco de dados do Firestore
-    useEffect(() => {
+    const loadCharacters = async () => {
         const user = auth().currentUser;
-        if (!user) {
-            console.log("Nenhum usuário logado detectado.");
-            return;
+        if (!user) return;
+
+        const query = firestore().collection('characterSheets').where('ownerId', '==', user.uid);
+
+        try {
+            const snapshotCache = await query.get({ source: 'cache' });
+            if (!snapshotCache.empty) {
+                setCharacters(snapshotCache.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                return;
+            }
+        } catch (e) {
+            console.log("Cache vazio, buscando do servidor...");
         }
 
-        const unsubscribe = firestore()
-            .collection('characterSheets')
-            .where('ownerId', '==', user.uid)
-            .onSnapshot(
-                snapshot => {
-                    if (snapshot) {
-                        const charData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        setCharacters(charData);
-                    }
-                },
-                error => {
-                    console.error("Erro de leitura no Firestore:", error);
-                }
-            );
+        try {
+            const snapshotServer = await query.get({ source: 'server' });
+            setCharacters(snapshotServer.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        } catch (error) {
+            console.error("Erro ao carregar personagens:", error);
+        }
+    };
 
-        return () => unsubscribe();
+    useEffect(() => {
+        loadCharacters();
     }, []);
 
     const handleSaveCharacter = async (sheetData: any) => {
         const user = auth().currentUser;
         if (!user) return;
-        
+
         try {
             if (editingCharacter) {
                 await firestore().collection('characterSheets').doc(editingCharacter.id).update({
@@ -67,12 +72,27 @@ export default function HomePlayer({onPressLevel}: any) {
                     ...sheetData,
                     ownerId: user.uid,
                     createdAt: firestore.FieldValue.serverTimestamp(),
-                    level: 1, 
+                    level: 1,
                     experience: 0,
                 });
             }
+            loadCharacters(); // Atualiza a lista localmente
         } catch (error) {
             console.error("Erro ao salvar personagem:", error);
+        }
+    };
+
+    const handleSaveXpLevel = async (sheetData: any) => {
+        if (!editingXpLevel) return;
+        try {
+            await firestore().collection('characterSheets').doc(editingXpLevel.id).update({
+                level: sheetData.level,
+                experience: sheetData.experience,
+            });
+            loadCharacters(); // Atualiza a lista localmente
+        } catch (error) {
+            console.error("Erro ao atualizar XP/Nível:", error);
+            Alert.alert("Erro", "Não foi possível atualizar a experiência.");
         }
     };
 
@@ -88,6 +108,7 @@ export default function HomePlayer({onPressLevel}: any) {
                     onPress: async () => {
                         try {
                             await firestore().collection('characterSheets').doc(id).delete();
+                            loadCharacters();
                         } catch (error) {
                             console.error("Erro ao excluir personagem:", error);
                             Alert.alert("Erro", "Não foi possível excluir a ficha.");
@@ -125,9 +146,9 @@ export default function HomePlayer({onPressLevel}: any) {
                 <View className='flex-1 w-full items-center'>
                     <Text className="text-textColor-secondary text-[18px] mb-4">Acesso Rápido</Text>
                     <View className="flex-row items-center justify-center gap-5">
-                        <TouchableOpacity className="bg-card size-48 items-center justify-center rounded-lg border-[1px] border-gold" onPress={() => { 
-                            setEditingCharacter(null); 
-                            setModalVisible(true); 
+                        <TouchableOpacity className="bg-card size-48 items-center justify-center rounded-lg border-[1px] border-gold" onPress={() => {
+                            setEditingCharacter(null);
+                            setModalVisible(true);
                         }}>
                             <View className="bg-gold-light w-20 h-20 items-center justify-center rounded-full mb-4">
                                 <SvgXml width={40} height={40} xml={swordIcon} />
@@ -140,7 +161,7 @@ export default function HomePlayer({onPressLevel}: any) {
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity className="bg-card size-48 items-center justify-center rounded-lg border-[1px] border-gold"
-                        onPress={() => navigation.navigate('Books')}>
+                            onPress={() => navigation.navigate('Books')}>
                             <View className="bg-gold-light w-20 h-20 items-center justify-center rounded-full mb-4">
                                 <SvgXml width={40} height={40} xml={bookIcon} />
                             </View>
@@ -177,7 +198,10 @@ export default function HomePlayer({onPressLevel}: any) {
                                         </View>
                                     </TouchableOpacity>
                                     <View className="w-[50px] justify-between items-center">
-                                        <TouchableOpacity className=" bg-gold w-12 h-12 rounded-full items-center justify-center" onPress={onPressLevel}>
+                                        <TouchableOpacity className=" bg-gold w-12 h-12 rounded-full items-center justify-center" onPress={() => {
+                                            setEditingXpLevel(char);
+                                            setXpModalVisible(true);
+                                        }}>
                                             <Text className="color-white font-bold text-4">Lv.{char.level || 0}</Text>
                                         </TouchableOpacity>
                                     </View>
@@ -192,7 +216,7 @@ export default function HomePlayer({onPressLevel}: any) {
                                         <SvgXml className="text-textColor-primary" xml={editIconXml} width="16" height="16" />
                                         <Text className="text-textColor-primary">Editar</Text>
                                     </TouchableOpacity>
-                                <TouchableOpacity className="flex-1 flex-row items-center justify-center p-[10px] gap-2" onPress={() => handleDeleteCharacter(char.id)}>
+                                    <TouchableOpacity className="flex-1 flex-row items-center justify-center p-[10px] gap-2" onPress={() => handleDeleteCharacter(char.id)}>
                                         <SvgXml className="text-destructive" xml={deleteIconXml} width="16" height="16" />
                                         <Text className="text-destructive">Excluir</Text>
                                     </TouchableOpacity>
@@ -201,18 +225,28 @@ export default function HomePlayer({onPressLevel}: any) {
                         ))}
                     </ScrollView>
                 </View>
-            </View>
+            </View >
             <CreatEditCaracter
                 visible={isModalVisible}
-                onClose={() => { 
-                    setModalVisible(false); 
-                    setEditingCharacter(null); 
+                onClose={() => {
+                    setModalVisible(false);
+                    setEditingCharacter(null);
                 }}
                 onSave={handleSaveCharacter}
-                isSaving={() => { }}
                 initialData={editingCharacter || {}} />
+            <LevelEdit
+                visible={isXpModalVisible}
+                onClose={() => {
+                    setXpModalVisible(false);
+                    setEditingXpLevel(null);
+                }}
+                onSave={handleSaveXpLevel}
+                initialData={{
+                    level: editingXpLevel?.level || 0,
+                    experience: editingXpLevel?.experience || editingXpLevel?.xp || 0
+                }} />
             <ExitButton />
-        </SafeAreaView>
+        </SafeAreaView >
 
     );
 }

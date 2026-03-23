@@ -34,34 +34,42 @@ export default function CharacterMagic({ route }: any) {
     const [magicDocId, setMagicDocId] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Busca as magias da subcoleção "magic" no Firebase
-    useEffect(() => {
+    const populateMagic = (doc: any) => {
+        setMagicDocId(doc.id);
+        const data = doc.data();
+        setCantrips(data.cantrips || '');
+        setTalents(data.talents || '');
+        if (data.spellLevels && Array.isArray(data.spellLevels)) {
+            setSpellLevels(data.spellLevels);
+        }
+    };
+
+    const loadMagic = async () => {
         if (!character.id) return;
+        const query = firestore().collection('characterSheets').doc(character.id).collection('spellsAndAbilities');
 
-        const unsubscribe = firestore()
-            .collection('characterSheets')
-            .doc(character.id)
-            .collection('spellsAndAbilities')
-            .onSnapshot(
-                (snapshot) => {
-                    if (snapshot && !snapshot.empty) {
-                        const doc = snapshot.docs[0];
-                        setMagicDocId(doc.id);
-                        const data = doc.data();
-                        setCantrips(data.cantrips || '');
-                        setTalents(data.talents || '');
-                        if (data.spellLevels && Array.isArray(data.spellLevels)) {
-                            setSpellLevels(data.spellLevels);
-                        }
-                        console.log(data);
-                    }
-                },
-                (error) => {
-                    console.error("Erro no onSnapshot de magias:", error);
-                }
-            );
+        try {
+            const snapshotCache = await query.get({ source: 'cache' });
+            if (!snapshotCache.empty) {
+                populateMagic(snapshotCache.docs[0]);
+                return;
+            }
+        } catch (e) {
+            console.log("Magias não encontradas no cache, buscando do servidor...");
+        }
 
-        return () => unsubscribe();
+        try {
+            const snapshotServer = await query.get({ source: 'server' });
+            if (!snapshotServer.empty) {
+                populateMagic(snapshotServer.docs[0]);
+            }
+        } catch (error) {
+            console.error("Erro ao carregar magias:", error);
+        }
+    };
+
+    useEffect(() => {
+        loadMagic();
     }, [character.id]);
 
     const updateSpellLevel = (level: number, field: keyof SpellLevelData, value: string) => {

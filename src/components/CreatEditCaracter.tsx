@@ -11,7 +11,7 @@ interface CreatEditCaracterProps {
     visible: boolean;
     onClose: () => void,
     onSave: (sheetData: any) => void,
-    isSaving: () => void,
+    isSaving?: boolean,
     initialData: {
         characterPhoto?: string;
         life: number
@@ -114,7 +114,7 @@ export default function CreatEditCaracter({ onClose, onSave, initialData, visibl
 
     const [life, setLife] = useState(0)
     const [efficiencyBonus, setEfficiencyBonus] = useState('')
-    const [characterMovement, setCharacterMovement] = useState('')
+    const [characterMovement, setCharacterMovement] = useState(0)
     const [characterName, setCharacterName] = useState('');
     const [characterRace, setCharacterRace] = useState('');
     const [characterClass, setCharacterClass] = useState('');
@@ -128,7 +128,6 @@ export default function CreatEditCaracter({ onClose, onSave, initialData, visibl
     const [charisma, setCharisma] = useState(0);
     const [selectedSkills, setSelectedSkills] = useState<string[]>([])
     const [selectedSafeguards, setSelectedSafeguards] = useState<string[]>([])
-    const [isEnabled] = useState(false);
     const [characterPhoto, setCharacterPhoto] = useState<string | null>(null);
 
     useEffect(() => {
@@ -149,7 +148,7 @@ export default function CreatEditCaracter({ onClose, onSave, initialData, visibl
             setCharisma(initialData.charisma || 0);
             setSelectedSkills(initialData.selectedSkills || []);
             setSelectedSafeguards(initialData.selectedSafeguards || []);
-            setCharacterMovement(initialData.movement ? initialData.movement.toString() : '');
+            setCharacterMovement(initialData.movement || 0 );
             setCharacterPhoto(initialData.characterPhoto || '');
         }
     }, [initialData]);
@@ -280,6 +279,8 @@ export default function CreatEditCaracter({ onClose, onSave, initialData, visibl
                             <Input className='border-l-gold border-t-gray-500 border-r-gray-500 border-b-gray-500 border-[2px] rounded-lg w-full' placeholder='Raça' value={characterRace} onChangeText={setCharacterRace} />
                             <Input className='border-l-gold border-t-gray-500 border-r-gray-500 border-b-gray-500 border-[2px] rounded-lg w-full' placeholder='Classe' value={characterClass} onChangeText={setCharacterClass} />
                             <Input className='border-l-gold border-t-gray-500 border-r-gray-500 border-b-gray-500 border-[2px] rounded-lg w-full' placeholder='Antecedentes' value={characterAntecedent} onChangeText={setCharacterAntecedent} />
+                            <Input className='border-l-gold border-t-gray-500 border-r-gray-500 border-b-gray-500 border-[2px] rounded-lg w-full' placeholder='Movimento' value={String(characterMovement)} onChangeText={(text) => setCharacterMovement(Number(text.replace(/[^0-9]/g, '')))} keyboardType="numeric" />
+                            
                             <Select
                                 className='w-full'
                                 selectClasses='border-l-gold border-t-gray-500 border-r-gray-500 border-b-gray-500 border-[2px] rounded-lg bg-transparent'

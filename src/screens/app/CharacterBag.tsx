@@ -50,36 +50,43 @@ export default function CharacterBag({ route }: any) {
     const [bagpackDocId, setBagpackDocId] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
+    const populateBagpack = (doc: any) => {
+        setBagpackDocId(doc.id);
+        const data = doc.data();
+        setBagpack(data.items || '');
+        setPlatina(data.platina || 0);
+        setGold(data.gold || 0);
+        setSilver(data.silver || 0);
+        setElectrum(data.electrum || 0);
+        setCopper(data.copper || 0);
+    };
 
+    const loadBagpack = async () => {
+        if (!character.id) return;
+        const query = firestore().collection('characterSheets').doc(character.id).collection('bagpack');
 
+        try {
+            const snapshotCache = await query.get({ source: 'cache' });
+            if (!snapshotCache.empty) {
+                populateBagpack(snapshotCache.docs[0]);
+                return;
+            }
+        } catch (e) {
+            console.log("Bolsa não encontrada no cache, buscando do servidor...");
+        }
+
+        try {
+            const snapshotServer = await query.get({ source: 'server' });
+            if (!snapshotServer.empty) {
+                populateBagpack(snapshotServer.docs[0]);
+            }
+        } catch (error) {
+            console.error("Erro ao carregar bolsa:", error);
+        }
+    };
 
     useEffect(() => {
-        if (!character.id) return;
-
-        const unsubscribe = firestore()
-            .collection('characterSheets')
-            .doc(character.id)
-            .collection('bagpack')
-            .onSnapshot(
-                (snapshot) => {
-                    if (snapshot && !snapshot.empty) {
-                        const doc = snapshot.docs[0];
-                        setBagpackDocId(doc.id);
-                        const data = doc.data();
-                        setBagpack(data.items || '');
-                        setPlatina(data.platina || 0);
-                        setGold(data.gold || 0);
-                        setSilver(data.silver || 0);
-                        setElectrum(data.electrum || 0);
-                        setCopper(data.copper || 0);
-                    }
-                },
-                (error) => {
-                    console.error("Erro no onSnapshot da bolsa:", error);
-                }
-            );
-
-        return () => unsubscribe();
+        loadBagpack();
     }, [character.id]);
 
     const saveBagpack = async () => {
