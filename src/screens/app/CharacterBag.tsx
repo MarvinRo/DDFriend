@@ -128,75 +128,76 @@ export default function CharacterBag({ route }: any) {
     return (
         <SafeAreaView className='flex-1 bg-background p-4'>
             <View className="flex-1 items-center justify-center">
-
-                <View className=" w-full bg-card rounded-lg p-4 mt-12 border border-gold mb-4">
-                    <View className="flex-row justify-between items-center mb-4 border-b border-gold pb-2">
-                        <Text className="text-gold font-bold text-lg">Bolsa do Personagem</Text>
-                        <TouchableOpacity onPress={saveBagpack} disabled={isSaving} className="bg-gold-light px-3 py-1 rounded">
-                            <Text className="text-gold-dark font-bold text-sm">{isSaving ? 'Salvando...' : 'Salvar'}</Text>
+                <ScrollView className="flex-1 w-full" contentContainerStyle={{ alignItems: 'center', paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
+                    <View className=" w-full bg-card rounded-lg p-4 mt-12 border border-gold mb-4">
+                        <View className="flex-row justify-between items-center mb-4 border-b border-gold pb-2">
+                            <Text className="text-gold font-bold text-lg">Bolsa do Personagem</Text>
+                            <TouchableOpacity onPress={saveBagpack} disabled={isSaving} className="bg-gold-light px-3 py-1 rounded">
+                                <Text className="text-gold-dark font-bold text-sm">{isSaving ? 'Salvando...' : 'Salvar'}</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <ScrollView showsVerticalScrollIndicator={true} className="h-[250px]" nestedScrollEnabled={true}>
+                            <TextInput
+                                multiline
+                                textAlignVertical="top"
+                                className="text-textColor-primary text-[16px] min-h-[250px]"
+                                value={bagpack}
+                                onChangeText={setBagpack}
+                                onBlur={saveBagpack}
+                                placeholder="Ex: 1x Espada Longa&#10;5x Poções de Cura&#10;Corda de 15m..."
+                                placeholderTextColor="#666"
+                            />
+                        </ScrollView>
+                    </View>
+                    <View className="w-full bg-card rounded-lg p-4 border border-gold mb-4 flex-row justify-between items-center">
+                        <Text className="text-gold font-bold text-lg w-1/2">Classe de Armadura (CA)</Text>
+                        <ShieldInput label="CA" value={armorClass} onChange={setArmorClass} onBlur={saveBagpack} />
+                    </View>
+                    <View className=" w-full bg-card rounded-lg p-4 border border-gold mb-32">
+                        <View className="flex-row justify-between items-center mb-4 border-b border-gold pb-2">
+                            <Text className="text-gold font-bold text-lg">Carteira do Personagem</Text>
+                        </View>
+                        <View className="flex-row flex-wrap justify-between gap-y-4">
+                            <View className="w-[30%] items-center">
+                                <Text className="text-textColor-secondary font-bold mb-1">Platina (PL)</Text>
+                                <TextInput className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(platina)} onChangeText={(val) => setPlatina(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
+                            </View>
+                            <View className="w-[30%] items-center">
+                                <Text className="text-textColor-secondary font-bold mb-1">Ouro (PO)</Text>
+                                <TextInput className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(gold)} onChangeText={(val) => setGold(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
+                            </View>
+                            <View className="w-[30%] items-center">
+                                <Text className="text-textColor-secondary font-bold mb-1">Electrum (PE)</Text>
+                                <TextInput className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(electrum)} onChangeText={(val) => setElectrum(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
+                            </View>
+                            <View className="w-[30%] items-center">
+                                <Text className="text-textColor-secondary font-bold mb-1">Prata (PP)</Text>
+                                <TextInput className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(silver)} onChangeText={(val) => setSilver(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
+                            </View>
+                            <View className="w-[30%] items-center">
+                                <Text className="text-textColor-secondary font-bold mb-1">Cobre (PC)</Text>
+                                <TextInput className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(copper)} onChangeText={(val) => setCopper(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
+                            </View>
+                        </View>
+                    </View>
+                    <View className=" absolute bottom-0 flex-row justify-center w-full h-18 items-center bg-card rounded-lg p-2 border border-gold gap-2">
+                        <TouchableOpacity className='w-[33%] border border-t-gold border-x-transparent border-b-transparent justify-center items-center flex-row gap-2'
+                            onPress={() => navigation.navigate('CharacterSheet', { character: { ...character, armorClass } })}>
+                            <SvgXml className="color-gold mb-3" xml={sheetIconXml} width="20px" height="20px" />
+                            <Text className="text-gold font-bold text-lg mb-2 pb-1">Ficha</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity className='w-[33%] border border-t-gold border-x-transparent border-b-transparent justify-center items-center flex-row gap-2'
+                            onPress={() => navigation.navigate('CharacterMagic', { character })}>
+                            <SvgXml className="color-gold mb-3" xml={spellBookXml} width="20px" height="20px" />
+                            <Text className="text-gold font-bold text-lg mb-2 pb-1">Magias</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity className='w-[33%] border border-t-gold border-x-transparent border-b-transparent justify-center items-center flex-row gap-2'
+                            onPress={() => navigation.navigate('Books')}>
+                            <SvgXml className="color-gold mb-3" xml={bookIcon} width="20px" height="20px" />
+                            <Text className="text-gold font-bold text-lg mb-2 pb-1">Livros</Text>
                         </TouchableOpacity>
                     </View>
-                    <ScrollView showsVerticalScrollIndicator={true} className="h-[250px]" nestedScrollEnabled={true}>
-                        <TextInput
-                            multiline
-                            textAlignVertical="top"
-                            className="text-textColor-primary text-[16px] min-h-[250px]"
-                            value={bagpack}
-                            onChangeText={setBagpack}
-                            onBlur={saveBagpack}
-                            placeholder="Ex: 1x Espada Longa&#10;5x Poções de Cura&#10;Corda de 15m..."
-                            placeholderTextColor="#666"
-                        />
-                    </ScrollView>
-                </View>
-                <View className="w-full bg-card rounded-lg p-4 border border-gold mb-4 flex-row justify-between items-center">
-                    <Text className="text-gold font-bold text-lg w-1/2">Classe de Armadura (CA)</Text>
-                    <ShieldInput label="CA" value={armorClass} onChange={setArmorClass} onBlur={saveBagpack} />
-                </View>
-                <View className=" w-full bg-card rounded-lg p-4 border border-gold mb-32">
-                    <View className="flex-row justify-between items-center mb-4 border-b border-gold pb-2">
-                        <Text className="text-gold font-bold text-lg">Carteira do Personagem</Text>
-                    </View>
-                    <View className="flex-row flex-wrap justify-between gap-y-4">
-                        <View className="w-[30%] items-center">
-                            <Text className="text-textColor-secondary font-bold mb-1">Platina (PL)</Text>
-                            <TextInput className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(platina)} onChangeText={(val) => setPlatina(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
-                        </View>
-                        <View className="w-[30%] items-center">
-                            <Text className="text-textColor-secondary font-bold mb-1">Ouro (PO)</Text>
-                            <TextInput className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(gold)} onChangeText={(val) => setGold(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
-                        </View>
-                        <View className="w-[30%] items-center">
-                            <Text className="text-textColor-secondary font-bold mb-1">Electrum (PE)</Text>
-                            <TextInput className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(electrum)} onChangeText={(val) => setElectrum(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
-                        </View>
-                        <View className="w-[30%] items-center">
-                            <Text className="text-textColor-secondary font-bold mb-1">Prata (PP)</Text>
-                            <TextInput className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(silver)} onChangeText={(val) => setSilver(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
-                        </View>
-                        <View className="w-[30%] items-center">
-                            <Text className="text-textColor-secondary font-bold mb-1">Cobre (PC)</Text>
-                            <TextInput className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(copper)} onChangeText={(val) => setCopper(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
-                        </View>
-                    </View>
-                </View>
-                <View className=" absolute bottom-0 flex-row justify-center w-full h-18 items-center bg-card rounded-lg p-2 border border-gold gap-2">
-                    <TouchableOpacity className='w-[33%] border border-t-gold border-x-transparent border-b-transparent justify-center items-center flex-row gap-2'
-                        onPress={() => navigation.navigate('CharacterSheet', { character: { ...character, armorClass } })}>
-                        <SvgXml className="color-gold mb-3" xml={sheetIconXml} width="20px" height="20px" />
-                        <Text className="text-gold font-bold text-lg mb-2 pb-1">Ficha</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity className='w-[33%] border border-t-gold border-x-transparent border-b-transparent justify-center items-center flex-row gap-2'
-                        onPress={() => navigation.navigate('CharacterMagic', { character })}>
-                        <SvgXml className="color-gold mb-3" xml={spellBookXml} width="20px" height="20px" />
-                        <Text className="text-gold font-bold text-lg mb-2 pb-1">Magias</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity className='w-[33%] border border-t-gold border-x-transparent border-b-transparent justify-center items-center flex-row gap-2'
-                        onPress={() => navigation.navigate('Books')}>
-                        <SvgXml className="color-gold mb-3" xml={bookIcon} width="20px" height="20px" />
-                        <Text className="text-gold font-bold text-lg mb-2 pb-1">Livros</Text>
-                    </TouchableOpacity>
-                </View>
+                </ScrollView>
             </View>
         </SafeAreaView>
 
