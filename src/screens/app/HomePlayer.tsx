@@ -10,6 +10,7 @@ import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from "@react-navigation/native";
 import LevelEdit from "@/components/LevelUp";
+import InboxModal from "@/components/InboxModal";
 
 
 // Habilita o uso de className no SvgXml mapeando as classes para a prop 'style'
@@ -23,12 +24,15 @@ export default function HomePlayer({ onPressLevel }: any) {
     const deleteIconXml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`
     const editIconXml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil-icon lucide-pencil"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>`
     const profileXml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
+    const mailIconXml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`
 
     const [isModalVisible, setModalVisible] = useState(false);
     const [isXpModalVisible, setXpModalVisible] = useState(false);
+    const [isInboxVisible, setInboxVisible] = useState(false);
     const [characters, setCharacters] = useState<any[]>([]);
     const [editingCharacter, setEditingCharacter] = useState<any>(null);
     const [editingXpLevel, setEditingXpLevel] = useState<any>(null);
+    const [hasNewInvites, setHasNewInvites] = useState(false);
 
     const loadCharacters = async () => {
         const user = auth().currentUser;
@@ -57,6 +61,26 @@ export default function HomePlayer({ onPressLevel }: any) {
     useEffect(() => {
         loadCharacters();
     }, []);
+
+    useEffect(() => {
+        const user = auth().currentUser;
+        if (!user) return;
+
+        // Observa as mesas onde o jogador foi convidado em tempo real
+        const unsubscribe = firestore()
+            .collection('campaigns')
+            .where('playerIds', 'array-contains', user.uid)
+            .onSnapshot((snapshot) => {
+                if (snapshot) {
+                    const campaignsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    const acceptedCampaignIds = characters.filter((c: any) => c.campaignId).map((c: any) => c.campaignId);
+                    const pending = campaignsData.filter(c => !acceptedCampaignIds.includes(c.id));
+                    setHasNewInvites(pending.length > 0);
+                }
+            }, (error) => console.error("Erro ao ouvir convites em tempo real:", error));
+
+        return () => unsubscribe();
+    }, [characters]); // Atualiza o observer caso a lista de fichas (e convites aceitos) mude
 
     const handleSaveCharacter = async (sheetData: any) => {
         const user = auth().currentUser;
@@ -128,6 +152,18 @@ export default function HomePlayer({ onPressLevel }: any) {
 
     return (
         <SafeAreaView className='flex-1 bg-background '>
+            {/* Ícone de Caixa de Entrada (Convites) no Canto Superior Esquerdo */}
+            <View className='absolute top-12 left-6 z-50'>
+                <TouchableOpacity onPress={() => setInboxVisible(true)} className="flex-row justify-center items-center mt-5">
+                    <View className="relative">
+                        <SvgXml xml={mailIconXml} width="24" height="24" className="text-textColor-primary" />
+                        {hasNewInvites && (
+                            <View className="absolute -top-1 -right-1 w-3 h-3 bg-red-600 rounded-full border border-background" />
+                        )}
+                    </View>
+                    <Text className="text-textColor-primary ml-2">Convites</Text>
+                </TouchableOpacity>
+            </View>
             <View className='flex-1 items-center mt-8 w-full'>
                 <View className="items-center justify-center mb-8">
                     <Text className='text-textColor-primary text-[20px]'>Bem Vindo</Text>
@@ -247,6 +283,12 @@ export default function HomePlayer({ onPressLevel }: any) {
                     level: editingXpLevel?.level || 0,
                     experience: editingXpLevel?.experience || editingXpLevel?.xp || 0
                 }} />
+            <InboxModal 
+                visible={isInboxVisible} 
+                onClose={() => setInboxVisible(false)} 
+                characters={characters} 
+                onUpdate={loadCharacters} 
+            />
             <ExitButton />
         </SafeAreaView >
 

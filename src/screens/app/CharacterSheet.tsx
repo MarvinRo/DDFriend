@@ -2,7 +2,7 @@ import ExitButton from '@/components/ExitButton';
 import { Progress } from '@/components/ui/Progress';
 import { useNavigation } from "@react-navigation/native";
 import React, { useState, useRef } from 'react';
-import { View, Text, ScrollView, Image, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, Image, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
 
@@ -56,12 +56,22 @@ export default function CharacterSheet({ route }: any) {
     const navigation = useNavigation<any>();
     // Pega os dados do personagem passados pela navegação
     const character = route?.params?.character || {};
+    const isFromMaster = route?.params?.fromMaster;
+    const campaign = route?.params?.campaign;
     const armor = route;
 
     // Estado local para a Vida Temporária/Atual (inicia com o valor salvo na ficha)
     const [currentLifeStr, setCurrentLifeStr] = useState(String(character.life || 0));
     const currentLife = parseInt(currentLifeStr, 10) || 0;
     const lifeInputRef = useRef<TextInput>(null);
+
+    const checkMasterAccess = () => {
+        if (isFromMaster) {
+            Alert.alert("Acesso Negado", "Você é o mestre pare de tendar modificar a ficha de seu jogador( seu safado)");
+            return true;
+        }
+        return false;
+    };
 
     // Funções para calcular os modificadores específicos (Atributo Base + Bônus de Proficiência)
     const getSafeguardMod = (name: string) => {
@@ -109,7 +119,17 @@ export default function CharacterSheet({ route }: any) {
         <SafeAreaView className='flex-1 bg-background p-4'>
             <TouchableOpacity
                 className="absolute top-6 left-4 z-50 bg-card p-2 rounded-full border border-gold mt-8"
-                onPress={() => navigation.navigate('HomePlayer')}
+                onPress={() => {
+                    if (isFromMaster) {
+                    if (campaign) {
+                        navigation.navigate('MasterCampaignView', { campaign });
+                    } else {
+                        navigation.navigate('MasterCampaignView');
+                    }
+                    } else {
+                        navigation.navigate('HomePlayer');
+                    }
+                }}
             >
                 <SvgXml xml={arrowLeftXml} width="24" height="24" />
             </TouchableOpacity>
@@ -153,26 +173,39 @@ export default function CharacterSheet({ route }: any) {
                         <View className="flex-row justify-between items-center mb-4">
                             <Text className="text-gold font-bold text-lg">Pontos de Vida</Text>
                             <View className="flex-row items-center gap-3">
-                                <TouchableOpacity onPress={() => setCurrentLifeStr(String(Math.max(0, currentLife - 1)))} className="bg-destructive w-8 h-8 rounded-full items-center justify-center">
+                                <TouchableOpacity onPress={() => {
+                                    if (checkMasterAccess()) return;
+                                    setCurrentLifeStr(String(Math.max(0, currentLife - 1)));
+                                }} className="bg-destructive w-8 h-8 rounded-full items-center justify-center">
                                     <Text className="text-white font-bold text-xl">-</Text>
                                 </TouchableOpacity>
                                 <View className="flex-row items-center justify-center min-w-[70px]">
                                     <Text className="text-textColor-secondary font-bold text-lg"> {character.life || 0} / </Text>
-                                    <TextInput
-                                        ref={lifeInputRef}
-                                        className="text-textColor-secondary font-bold text-lg p-0 m-0 text-right"
-                                        keyboardType="numeric"
-                                        value={currentLifeStr}
-                                        onChangeText={(text) => setCurrentLifeStr(text.replace(/[^0-9]/g, ''))}
-                                        selectTextOnFocus
-                                    />
+                                    <View className="relative">
+                                        <TextInput
+                                            ref={lifeInputRef}
+                                            className="text-textColor-secondary font-bold text-lg p-0 m-0 text-right"
+                                            keyboardType="numeric"
+                                            value={currentLifeStr}
+                                            onChangeText={(text) => setCurrentLifeStr(text.replace(/[^0-9]/g, ''))}
+                                            selectTextOnFocus
+                                            editable={!isFromMaster}
+                                        />
+                                        {isFromMaster && <TouchableOpacity style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} onPress={checkMasterAccess} activeOpacity={1} />}
+                                    </View>
                                 </View>
-                                <TouchableOpacity onPress={() => setCurrentLifeStr(String(currentLife + 1))} className="bg-green-600 w-8 h-8 rounded-full items-center justify-center">
+                                <TouchableOpacity onPress={() => {
+                                    if (checkMasterAccess()) return;
+                                    setCurrentLifeStr(String(currentLife + 1));
+                                }} className="bg-green-600 w-8 h-8 rounded-full items-center justify-center">
                                     <Text className="text-white font-bold text-xl">+</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
-                        <TouchableOpacity activeOpacity={0.8} onPress={() => lifeInputRef.current?.focus()}>
+                        <TouchableOpacity activeOpacity={0.8} onPress={() => {
+                            if (checkMasterAccess()) return;
+                            lifeInputRef.current?.focus();
+                        }}>
                             <Progress value={currentLife} max={character.life || 1} className="mb-2" />
                         </TouchableOpacity>
                     </View>
@@ -210,12 +243,12 @@ export default function CharacterSheet({ route }: any) {
                 </ScrollView>
                 <View className=" absolute bottom-0 flex-row justify-center w-full h-18 items-center bg-card rounded-lg p-2 border border-gold gap-2">
                     <TouchableOpacity className='w-[33%] border border-t-gold border-x-transparent border-b-transparent justify-center items-center flex-row gap-2'
-                        onPress={() => navigation.navigate('CharacterBag', { character })}>
+                    onPress={() => navigation.navigate('CharacterBag', { character, fromMaster: isFromMaster, campaign })}>
                         <SvgXml className="color-gold mb-3" xml={bagItensXml} width="20px" height="20px" />
                         <Text className="text-gold font-bold text-lg mb-2 pb-1">Bolsa</Text>
                     </TouchableOpacity>
                     <TouchableOpacity className='w-[33%] border border-t-gold border-x-transparent border-b-transparent justify-center items-center flex-row gap-2'
-                        onPress={() => navigation.navigate('CharacterMagic', { character })}>
+                    onPress={() => navigation.navigate('CharacterMagic', { character, fromMaster: isFromMaster, campaign })}>
                         <SvgXml className="color-gold mb-3" xml={spellBookXml} width="20px" height="20px" />
                         <Text className="text-gold font-bold text-lg mb-2 pb-1">Magias</Text>
                     </TouchableOpacity>

@@ -1,11 +1,24 @@
 import { View, Text, TouchableOpacity, Image,Alert } from "react-native";
 import { useNavigation } from '@react-navigation/native';
 import ExitButton from "@/components/ExitButton";
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 
 
 export default function ChoiceMember() {
     const navigation = useNavigation<any>();
     
+    const handleEnterAsMaster = async () => {
+        const user = auth().currentUser;
+        if (user) {
+            // Define no banco de dados que este usuário é um mestre
+            await firestore().collection('users').doc(user.uid).set({
+                isMaster: true
+            }, { merge: true }).catch(e => console.log("Erro ao atualizar status de mestre:", e));
+        }
+        navigation.navigate('HomeMaster');
+    };
+
     return (
         <View className='flex-1 bg-background justify-center items-center'>
             <Text className='text-textColor-primary text-2xl font-bold mb-8'>Quem será vc nessa aventura?</Text>
@@ -16,7 +29,7 @@ export default function ChoiceMember() {
                     shadowOpacity: 0.9,
                     shadowRadius: 25,
                     elevation: 15
-                }} onPress={() => Alert.alert("Área em desenvolvimento", "Infelizmente essa área ainda não está disponível.")}>
+                }} onPress={handleEnterAsMaster}>
                     <Image source={require('@/assets/images/DM.png')} className='w-[100px] h-[100px] rounded-lg' />
                     <Text className='text-foreground text-lg'>Mestre</Text>
                     <View className=' flex-row items-center mt-6 mb-2 px-2'>

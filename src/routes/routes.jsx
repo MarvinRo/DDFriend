@@ -8,9 +8,11 @@ import { View, ActivityIndicator } from 'react-native';
 import LoginPage from '@/screens/auth/LoginPage';
 import ChoiceMember from '@/screens/app/ChoiceMember';
 import HomePlayer from '@/screens/app/HomePlayer';
+import HomeMaster from '@/screens/app/HomeMaster';
 import CharacterSheet from '@/screens/app/CharacterSheet';
 import CharacterBag from '@/screens/app/CharacterBag';
 import CharacterMagic from '@/screens/app/CharacterMagic';
+import MasterCampaignView from '@/screens/app/MasterCampaignView';
 import Books from '@/screens/app/Books';
 
 
@@ -40,6 +42,8 @@ const Routes = () => {
           <Stack.Group>
             <Stack.Screen name="Home" component={ChoiceMember} />
             <Stack.Screen name="HomePlayer" component={HomePlayer} />
+            <Stack.Screen name="HomeMaster" component={HomeMaster} />
+            <Stack.Screen name="MasterCampaignView" component={MasterCampaignView} />
             <Stack.Screen name="CharacterSheet" component={CharacterSheet} />
             <Stack.Screen name="CharacterBag" component={CharacterBag} />
             <Stack.Screen name="CharacterMagic" component={CharacterMagic} />

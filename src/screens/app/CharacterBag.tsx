@@ -8,14 +8,15 @@ import { SvgXml } from 'react-native-svg';
 import firestore from '@react-native-firebase/firestore';
 
 
-const ShieldInput = ({ label, value, onChange, onBlur }: { label: string, value: number, onChange: (val: number) => void, onBlur?: () => void }) => {
+const ShieldInput = ({ label, value, onChange, onBlur, isFromMaster, onCheckMaster }: any) => {
     return (
         <View className="w-[75px] h-[85px] items-center justify-center m-1">
             <View className="absolute inset-0 items-center justify-center">
                 <Image source={require('@/assets/images/Armadura.png')} style={{ width: 200, height: 200, resizeMode: 'contain' }} />
             </View>
-            <View className="flex-col items-center justify-center w-full h-full pt-1">
+            <View className="flex-col items-center justify-center w-full h-full pt-1 relative">
                 <TextInput
+                    editable={!isFromMaster}
                     className="text-textColor-primary text-[24px] font-bold text-center p-0 m-0 w-full"
                     keyboardType="numeric"
                     value={value ? value.toString() : ''}
@@ -23,6 +24,7 @@ const ShieldInput = ({ label, value, onChange, onBlur }: { label: string, value:
                     onBlur={onBlur}
                     maxLength={2}
                 />
+                {isFromMaster && <TouchableOpacity style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} onPress={onCheckMaster} activeOpacity={1} />}
             </View>
         </View>
     );
@@ -39,6 +41,8 @@ export default function CharacterBag({ route }: any) {
 
     const navigation = useNavigation<any>();
     const character = route?.params?.character || {};
+    const isFromMaster = route?.params?.fromMaster;
+    const campaign = route?.params?.campaign;
 
     const [bagpack, setBagpack] = useState('');
     const [platina, setPlatina] = useState(0);
@@ -89,7 +93,16 @@ export default function CharacterBag({ route }: any) {
         loadBagpack();
     }, [character.id]);
 
+    const checkMasterAccess = () => {
+        if (isFromMaster) {
+            Alert.alert("Acesso Negado", "Você é o mestre pare de tendar modificar a ficha de seu jogador( seu safado)");
+            return true;
+        }
+        return false;
+    };
+
     const saveBagpack = async () => {
+        if (isFromMaster) return;
         if (!character.id) return;
         setIsSaving(true);
 
@@ -127,17 +140,20 @@ export default function CharacterBag({ route }: any) {
 
     return (
         <SafeAreaView className='flex-1 bg-background p-4'>
+            
             <View className="flex-1 items-center justify-center">
                 <ScrollView className="flex-1 w-full" contentContainerStyle={{ alignItems: 'center', paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
                     <View className=" w-full bg-card rounded-lg p-4 mt-12 border border-gold mb-4">
                         <View className="flex-row justify-between items-center mb-4 border-b border-gold pb-2">
                             <Text className="text-gold font-bold text-lg">Bolsa do Personagem</Text>
-                            <TouchableOpacity onPress={saveBagpack} disabled={isSaving} className="bg-gold-light px-3 py-1 rounded">
+                        <TouchableOpacity onPress={() => { if (isFromMaster) { checkMasterAccess(); } else { saveBagpack(); } }} disabled={isSaving} className="bg-gold-light px-3 py-1 rounded">
                                 <Text className="text-gold-dark font-bold text-sm">{isSaving ? 'Salvando...' : 'Salvar'}</Text>
                             </TouchableOpacity>
                         </View>
                         <ScrollView showsVerticalScrollIndicator={true} className="h-[250px]" nestedScrollEnabled={true}>
+                        <View className="relative w-full">
                             <TextInput
+                                editable={!isFromMaster}
                                 multiline
                                 textAlignVertical="top"
                                 className="text-textColor-primary text-[16px] min-h-[250px]"
@@ -147,11 +163,13 @@ export default function CharacterBag({ route }: any) {
                                 placeholder="Ex: 1x Espada Longa&#10;5x Poções de Cura&#10;Corda de 15m..."
                                 placeholderTextColor="#666"
                             />
+                            {isFromMaster && <TouchableOpacity style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} onPress={checkMasterAccess} activeOpacity={1} />}
+                        </View>
                         </ScrollView>
                     </View>
                     <View className="w-full bg-card rounded-lg p-4 border border-gold mb-4 flex-row justify-between items-center">
                         <Text className="text-gold font-bold text-lg w-1/2">Classe de Armadura (CA)</Text>
-                        <ShieldInput label="CA" value={armorClass} onChange={setArmorClass} onBlur={saveBagpack} />
+                    <ShieldInput label="CA" value={armorClass} onChange={setArmorClass} onBlur={saveBagpack} isFromMaster={isFromMaster} onCheckMaster={checkMasterAccess} />
                     </View>
                     <View className=" w-full bg-card rounded-lg p-4 border border-gold mb-32">
                         <View className="flex-row justify-between items-center mb-4 border-b border-gold pb-2">
@@ -160,34 +178,49 @@ export default function CharacterBag({ route }: any) {
                         <View className="flex-row flex-wrap justify-between gap-y-4">
                             <View className="w-[30%] items-center">
                                 <Text className="text-textColor-secondary font-bold mb-1">Platina (PL)</Text>
-                                <TextInput className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(platina)} onChangeText={(val) => setPlatina(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
+                            <View className="relative w-full">
+                                <TextInput editable={!isFromMaster} className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(platina)} onChangeText={(val) => setPlatina(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
+                                {isFromMaster && <TouchableOpacity style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} onPress={checkMasterAccess} activeOpacity={1} />}
+                            </View>
                             </View>
                             <View className="w-[30%] items-center">
                                 <Text className="text-textColor-secondary font-bold mb-1">Ouro (PO)</Text>
-                                <TextInput className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(gold)} onChangeText={(val) => setGold(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
+                            <View className="relative w-full">
+                                <TextInput editable={!isFromMaster} className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(gold)} onChangeText={(val) => setGold(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
+                                {isFromMaster && <TouchableOpacity style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} onPress={checkMasterAccess} activeOpacity={1} />}
+                            </View>
                             </View>
                             <View className="w-[30%] items-center">
                                 <Text className="text-textColor-secondary font-bold mb-1">Electrum (PE)</Text>
-                                <TextInput className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(electrum)} onChangeText={(val) => setElectrum(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
+                            <View className="relative w-full">
+                                <TextInput editable={!isFromMaster} className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(electrum)} onChangeText={(val) => setElectrum(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
+                                {isFromMaster && <TouchableOpacity style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} onPress={checkMasterAccess} activeOpacity={1} />}
+                            </View>
                             </View>
                             <View className="w-[30%] items-center">
                                 <Text className="text-textColor-secondary font-bold mb-1">Prata (PP)</Text>
-                                <TextInput className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(silver)} onChangeText={(val) => setSilver(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
+                            <View className="relative w-full">
+                                <TextInput editable={!isFromMaster} className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(silver)} onChangeText={(val) => setSilver(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
+                                {isFromMaster && <TouchableOpacity style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} onPress={checkMasterAccess} activeOpacity={1} />}
+                            </View>
                             </View>
                             <View className="w-[30%] items-center">
                                 <Text className="text-textColor-secondary font-bold mb-1">Cobre (PC)</Text>
-                                <TextInput className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(copper)} onChangeText={(val) => setCopper(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
+                            <View className="relative w-full">
+                                <TextInput editable={!isFromMaster} className="bg-background border border-gold-light text-textColor-primary text-center rounded p-2 w-full" keyboardType="numeric" value={String(copper)} onChangeText={(val) => setCopper(Number(val.replace(/[^0-9]/g, '')))} onBlur={saveBagpack} />
+                                {isFromMaster && <TouchableOpacity style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} onPress={checkMasterAccess} activeOpacity={1} />}
+                            </View>
                             </View>
                         </View>
                     </View>
                     <View className=" absolute bottom-0 flex-row justify-center w-full h-18 items-center bg-card rounded-lg p-2 border border-gold gap-2">
                         <TouchableOpacity className='w-[33%] border border-t-gold border-x-transparent border-b-transparent justify-center items-center flex-row gap-2'
-                            onPress={() => navigation.navigate('CharacterSheet', { character: { ...character, armorClass } })}>
+                        onPress={() => navigation.navigate('CharacterSheet', { character: { ...character, armorClass }, fromMaster: isFromMaster, campaign })}>
                             <SvgXml className="color-gold mb-3" xml={sheetIconXml} width="20px" height="20px" />
                             <Text className="text-gold font-bold text-lg mb-2 pb-1">Ficha</Text>
                         </TouchableOpacity>
                         <TouchableOpacity className='w-[33%] border border-t-gold border-x-transparent border-b-transparent justify-center items-center flex-row gap-2'
-                            onPress={() => navigation.navigate('CharacterMagic', { character })}>
+                        onPress={() => navigation.navigate('CharacterMagic', { character, fromMaster: isFromMaster, campaign })}>
                             <SvgXml className="color-gold mb-3" xml={spellBookXml} width="20px" height="20px" />
                             <Text className="text-gold font-bold text-lg mb-2 pb-1">Magias</Text>
                         </TouchableOpacity>
