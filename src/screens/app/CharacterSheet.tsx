@@ -253,7 +253,7 @@ export default function CharacterSheet({ route }: any) {
                         <Text className="text-gold font-bold text-lg mb-2 pb-1">Magias</Text>
                     </TouchableOpacity>
                     <TouchableOpacity className='w-[33%] border border-t-gold border-x-transparent border-b-transparent justify-center items-center flex-row gap-2'
-                        onPress={() => navigation.navigate('Books')}>
+                        onPress={() => navigation.navigate('Books', { isMaster: isFromMaster })}>
                         <SvgXml className="color-gold mb-3" xml={bookIcon} width="20px" height="20px" />
                         <Text className="text-gold font-bold text-lg mb-2 pb-1">Livros</Text>
                     </TouchableOpacity>

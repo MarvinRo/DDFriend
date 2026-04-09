@@ -73,7 +73,7 @@ export default function InboxModal({ visible, onClose, characters, onUpdate }: I
             const campaignRef = firestore().collection('campaigns').doc(campaignId);
             const campaignDoc = await campaignRef.get();
             
-            if (campaignDoc.exists) {
+            if (campaignDoc.exists()) {
                 const campaignData = campaignDoc.data();
                 const playerToRemove = (campaignData?.players || []).find((p: any) => p.id === user.uid || p.uid === user.uid);
                 

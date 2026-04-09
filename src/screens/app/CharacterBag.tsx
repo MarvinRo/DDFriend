@@ -2,7 +2,7 @@ import ExitButton from '@/components/ExitButton';
 import { Progress } from '@/components/ui/Progress';
 import { useNavigation } from '@react-navigation/native';
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Image, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, Image, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
 import firestore from '@react-native-firebase/firestore';
@@ -140,10 +140,10 @@ export default function CharacterBag({ route }: any) {
 
     return (
         <SafeAreaView className='flex-1 bg-background p-4'>
-            
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1}}>
             <View className="flex-1 items-center justify-center">
                 <ScrollView className="flex-1 w-full" contentContainerStyle={{ alignItems: 'center', paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
-                    <View className=" w-full bg-card rounded-lg p-4 mt-12 border border-gold mb-4">
+                    <View className=" w-full bg-card rounded-lg p-4 mt-0 border border-gold mb-2">
                         <View className="flex-row justify-between items-center mb-4 border-b border-gold pb-2">
                             <Text className="text-gold font-bold text-lg">Bolsa do Personagem</Text>
                         <TouchableOpacity onPress={() => { if (isFromMaster) { checkMasterAccess(); } else { saveBagpack(); } }} disabled={isSaving} className="bg-gold-light px-3 py-1 rounded">
@@ -171,7 +171,7 @@ export default function CharacterBag({ route }: any) {
                         <Text className="text-gold font-bold text-lg w-1/2">Classe de Armadura (CA)</Text>
                     <ShieldInput label="CA" value={armorClass} onChange={setArmorClass} onBlur={saveBagpack} isFromMaster={isFromMaster} onCheckMaster={checkMasterAccess} />
                     </View>
-                    <View className=" w-full bg-card rounded-lg p-4 border border-gold mb-32">
+                    <View className=" w-full bg-card rounded-lg p-4 border border-gold mb-20">
                         <View className="flex-row justify-between items-center mb-4 border-b border-gold pb-2">
                             <Text className="text-gold font-bold text-lg">Carteira do Personagem</Text>
                         </View>
@@ -213,7 +213,8 @@ export default function CharacterBag({ route }: any) {
                             </View>
                         </View>
                     </View>
-                    <View className=" absolute bottom-0 flex-row justify-center w-full h-18 items-center bg-card rounded-lg p-2 border border-gold gap-2">
+                </ScrollView>
+                <View className="absolute bottom-0 flex-row justify-center w-full h-18 items-center bg-card rounded-lg p-2 border border-gold gap-2">
                         <TouchableOpacity className='w-[33%] border border-t-gold border-x-transparent border-b-transparent justify-center items-center flex-row gap-2'
                         onPress={() => navigation.navigate('CharacterSheet', { character: { ...character, armorClass }, fromMaster: isFromMaster, campaign })}>
                             <SvgXml className="color-gold mb-3" xml={sheetIconXml} width="20px" height="20px" />
@@ -225,13 +226,13 @@ export default function CharacterBag({ route }: any) {
                             <Text className="text-gold font-bold text-lg mb-2 pb-1">Magias</Text>
                         </TouchableOpacity>
                         <TouchableOpacity className='w-[33%] border border-t-gold border-x-transparent border-b-transparent justify-center items-center flex-row gap-2'
-                            onPress={() => navigation.navigate('Books')}>
+                            onPress={() => navigation.navigate('Books', { isMaster: isFromMaster })}>
                             <SvgXml className="color-gold mb-3" xml={bookIcon} width="20px" height="20px" />
                             <Text className="text-gold font-bold text-lg mb-2 pb-1">Livros</Text>
                         </TouchableOpacity>
                     </View>
-                </ScrollView>
             </View>
+            </KeyboardAvoidingView>
         </SafeAreaView>
 
     );

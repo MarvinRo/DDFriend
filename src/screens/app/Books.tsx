@@ -44,12 +44,26 @@ const listaDeDocumentos = [
         titulo: 'Regras básicas',
     },
     {
-        id: '19mxe0fbWaZCDCrwRxJIckwP3jsAjdnJN',
+        id: '13yNSaANuC56hfiyHoagu0Bu7jjOOJgv9',
         titulo: 'Costa da Espada',
     },
+    {
+        id: '1Q9k89EYL34yU_qIQ3zzV324eKk4jtiPX',
+        titulo: "Van Richten's Guide to Ravenloft (ENG)",
+    },
+    {
+        id: '1JBdAG4llZoyTIYcE2NBfKljb5_q_7dVO',
+        titulo: 'Guia do Mestre',
+        onlyMaster: true,
+    },
+    {
+        id: '1mUcBId2dZhMzar6PMJp0YN3biIIzwcpP',
+        titulo: 'Guia do volo para monstros',
+        onlyMaster: true,
+    }
 ];
 
-export default function Books() {
+export default function Books({ route }: any) {
     const arrowLeftXml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C49A4A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`
     const bookIconXml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C49A4A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-open-text"><path d="M12 7v14"/><path d="M16 12h2"/><path d="M16 8h2"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/><path d="M6 12h2"/><path d="M6 8h2"/></svg>`
 
@@ -57,6 +71,10 @@ export default function Books() {
 
     const [isModalVisible, setModalVisible] = useState(false);
     const [selectedPdfId, setSelectedPdfId] = useState<string | null>(null);
+
+    // Lê o parâmetro passado na navegação. Se não existir, será false (Jogador).
+    const isMaster = route?.params?.isMaster || false;
+    const displayedBooks = listaDeDocumentos.filter(doc => !doc.onlyMaster || isMaster);
 
     const abrirModalComPdf = (pdfId: string) => {
         setSelectedPdfId(pdfId);
@@ -80,7 +98,7 @@ export default function Books() {
             <View className="flex-1 items-center mt-20 w-full">
                 <Text className='text-gold text-2xl font-bold mb-8'>Documentos Disponíveis</Text>
                 <ScrollView className="flex-1 w-full px-2" contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
-                    {listaDeDocumentos.map((doc) => (
+                    {displayedBooks.map((doc) => (
                         <TouchableOpacity
                             key={doc.id}
                             className="bg-card w-[48%] flex-col items-center p-4 rounded-lg border border-gold mb-4"

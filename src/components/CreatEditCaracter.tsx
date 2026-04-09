@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Modal, Pressable, Text, View, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput } from 'react-native';
+import { Alert, Modal, Pressable, Text, View, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { Input } from '@/components/ui/Input';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Select } from '@/components/ui/Select';
@@ -109,12 +109,14 @@ export default function CreatEditCaracter({ onClose, onSave, initialData, visibl
         setSelectedSkills([]);
         setSelectedSafeguards([]);
         setCharacterPhoto(null);
+            setCharacterMovement('');
+            setEfficiencyBonus('');
         onClose();
     };
 
     const [life, setLife] = useState(0)
     const [efficiencyBonus, setEfficiencyBonus] = useState('')
-    const [characterMovement, setCharacterMovement] = useState(0)
+    const [characterMovement, setCharacterMovement] = useState('')
     const [characterName, setCharacterName] = useState('');
     const [characterRace, setCharacterRace] = useState('');
     const [characterClass, setCharacterClass] = useState('');
@@ -148,7 +150,7 @@ export default function CreatEditCaracter({ onClose, onSave, initialData, visibl
             setCharisma(initialData.charisma || 0);
             setSelectedSkills(initialData.selectedSkills || []);
             setSelectedSafeguards(initialData.selectedSafeguards || []);
-            setCharacterMovement(initialData.movement || 0 );
+            setCharacterMovement(initialData.movement ? initialData.movement.toString() : '');
             setCharacterPhoto(initialData.characterPhoto || '');
         }
     }, [initialData]);
@@ -211,7 +213,7 @@ export default function CreatEditCaracter({ onClose, onSave, initialData, visibl
             characterPhoto,
             life: Number(life) || 0,
             efficiencyBonus: efficiencyBonus || '0',
-            movement: Number(characterMovement) || 0,
+            movement: Number(characterMovement) || '',
             strength: Number(strength) || 0,
             dexterity: Number(dexterity) || 0,
             constitution: Number(constitution) || 0,
@@ -246,139 +248,141 @@ export default function CreatEditCaracter({ onClose, onSave, initialData, visibl
                 Alert.alert('Modal has been closed.');
                 handleClose();
             }}>
-            <SafeAreaView className="flex-1 justify-center items-center">
-                <View className='m-5 bg-card rounded-[10px] p-[35px] items-center justify-center  flex-1 border-gold border-[1px] w-11/12'>
-                    <ScrollView className='w-full flex-1 mb-4 ' showsVerticalScrollIndicator={false}>
-                        <View className='flex-1 items-center justify-start w-full gap-3 pb-2'>
-                            <Text className='text-textColor-primary text-[24px] font-bold mb-2'>{initialData && Object.keys(initialData).length > 0 ? 'Editando Ficha' : 'Nova Ficha'}</Text>
-                            <TouchableOpacity onPress={selectImage} >
-                                {characterPhoto ? (
-                                    <Image
-                                        source={{ uri: characterPhoto }}
-                                        className="w-[120px] h-[120px] rounded-full"
-                                        resizeMode="cover"
-                                    />
-                                ) : (
-                                    <View className="w-[120px] h-[120px] rounded-full bg-slate-800 justify-center items-center border border-dashed border-gray-100">
-                                        <Text className="text-gray-100 text-center text-sm">Adicionar Foto</Text>
-                                    </View>
-                                )}
-                            </TouchableOpacity>
-
-                            {characterPhoto && (
-                                <TouchableOpacity
-                                    onPress={removeImage}
-                                    className="flex-row items-center mt-1 mb-2 bg-destructive py-1.5 px-3 rounded-lg"
-                                >
-                                    <SvgXml xml={deleteIconXml} width="16" height="16" stroke="#f5f5f5" />
-                                    <Text className="text-gray-100 ml-2 font-bold text-sm">Remover Foto</Text>
+            <SafeAreaView className="flex-1">
+                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <View className='my-5 bg-card rounded-[10px] p-[20px] items-center justify-center flex-1 max-h-[95%] border-gold border-[1px] w-11/12'>
+                        <ScrollView className='w-full flex-1 mb-4 ' showsVerticalScrollIndicator={false}>
+                            <View className='flex-1 items-center justify-start w-full gap-3 pb-2'>
+                                <Text className='text-textColor-primary text-[24px] font-bold mb-2'>{initialData && Object.keys(initialData).length > 0 ? 'Editando Ficha' : 'Nova Ficha'}</Text>
+                                <TouchableOpacity onPress={selectImage} >
+                                    {characterPhoto ? (
+                                        <Image
+                                            source={{ uri: characterPhoto }}
+                                            className="w-[120px] h-[120px] rounded-full"
+                                            resizeMode="cover"
+                                        />
+                                    ) : (
+                                        <View className="w-[120px] h-[120px] rounded-full bg-slate-800 justify-center items-center border border-dashed border-gray-100">
+                                            <Text className="text-gray-100 text-center text-sm">Adicionar Foto</Text>
+                                        </View>
+                                    )}
                                 </TouchableOpacity>
-                            )}
 
-                            <Input className='border-l-gold border-t-gray-500 border-r-gray-500 border-b-gray-500 border-[2px] rounded-lg w-full' placeholder='Nome' value={characterName} onChangeText={setCharacterName} />
-                            <Input className='border-l-gold border-t-gray-500 border-r-gray-500 border-b-gray-500 border-[2px] rounded-lg w-full' placeholder='Raça' value={characterRace} onChangeText={setCharacterRace} />
-                            <Input className='border-l-gold border-t-gray-500 border-r-gray-500 border-b-gray-500 border-[2px] rounded-lg w-full' placeholder='Classe' value={characterClass} onChangeText={setCharacterClass} />
-                            <Input className='border-l-gold border-t-gray-500 border-r-gray-500 border-b-gray-500 border-[2px] rounded-lg w-full' placeholder='Antecedentes' value={characterAntecedent} onChangeText={setCharacterAntecedent} />
-                            <Input className='border-l-gold border-t-gray-500 border-r-gray-500 border-b-gray-500 border-[2px] rounded-lg w-full' placeholder='Movimento' value={String(characterMovement)} onChangeText={(text) => setCharacterMovement(Number(text.replace(/[^0-9]/g, '')))} keyboardType="numeric" />
-                            
-                            <Select
-                                className='w-full'
-                                selectClasses='border-l-gold border-t-gray-500 border-r-gray-500 border-b-gray-500 border-[2px] rounded-lg bg-transparent'
-                                options={alignments.map((alignment) => ({ label: alignment, value: alignment }))}
-                                onSelect={(val) => setAlignment(val)}
-                                selectedValue={alignment}
-                                labelKey='label'
-                                valueKey='value'
-                                placeholder='Alinhamento'
-                            />
+                                {characterPhoto && (
+                                    <TouchableOpacity
+                                        onPress={removeImage}
+                                        className="flex-row items-center mt-1 mb-2 bg-destructive py-1.5 px-3 rounded-lg"
+                                    >
+                                        <SvgXml xml={deleteIconXml} width="16" height="16" stroke="#f5f5f5" />
+                                        <Text className="text-gray-100 ml-2 font-bold text-sm">Remover Foto</Text>
+                                    </TouchableOpacity>
+                                )}
 
-                            <Text className='text-textColor-primary text-[18px] font-bold mt-4 mb-1'>Atributos</Text>
-                            <View className=' flex-row items-center mb-2 px-2'>
-                                <View className='w-32 h-0.5 bg-gold-dark' />
-                                <View className='w-2 h-2 bg-gold mx-3 origin-center rotate-45' />
-                                <View className='w-32 h-0.5 bg-gold-dark' />
-                            </View>
-                            <View className="w-full items-center justify-center py-2">
-                                {/* Linha 1 */}
-                                <View className="flex-row gap-2 justify-center z-10">
-                                    <AttributeHexagon label="FOR" value={strength} onChange={setStrength} />
-                                    <AttributeHexagon label="DES" value={dexterity} onChange={setDexterity} />
+                                <Input className='border-l-gold border-t-gray-500 border-r-gray-500 border-b-gray-500 border-[2px] rounded-lg w-full' placeholder='Nome' value={characterName} onChangeText={setCharacterName} />
+                                <Input className='border-l-gold border-t-gray-500 border-r-gray-500 border-b-gray-500 border-[2px] rounded-lg w-full' placeholder='Raça' value={characterRace} onChangeText={setCharacterRace} />
+                                <Input className='border-l-gold border-t-gray-500 border-r-gray-500 border-b-gray-500 border-[2px] rounded-lg w-full' placeholder='Classe' value={characterClass} onChangeText={setCharacterClass} />
+                                <Input className='border-l-gold border-t-gray-500 border-r-gray-500 border-b-gray-500 border-[2px] rounded-lg w-full' placeholder='Antecedentes' value={characterAntecedent} onChangeText={setCharacterAntecedent} />
+                                <Input className='border-l-gold border-t-gray-500 border-r-gray-500 border-b-gray-500 border-[2px] rounded-lg w-full' placeholder='Movimento' value={characterMovement} onChangeText={(text) => setCharacterMovement(text.replace(/[^0-9]/g, ''))} keyboardType="numeric" />
+
+                                <Select
+                                    className='w-full'
+                                    selectClasses='border-l-gold border-t-gray-500 border-r-gray-500 border-b-gray-500 border-[2px] rounded-lg bg-transparent'
+                                    options={alignments.map((alignment) => ({ label: alignment, value: alignment }))}
+                                    onSelect={(val) => setAlignment(val)}
+                                    selectedValue={alignment}
+                                    labelKey='label'
+                                    valueKey='value'
+                                    placeholder='Alinhamento'
+                                />
+
+                                <Text className='text-textColor-primary text-[18px] font-bold mt-4 mb-1'>Atributos</Text>
+                                <View className=' flex-row items-center mb-2 px-2'>
+                                    <View className='w-32 h-0.5 bg-gold-dark' />
+                                    <View className='w-2 h-2 bg-gold mx-3 origin-center rotate-45' />
+                                    <View className='w-32 h-0.5 bg-gold-dark' />
                                 </View>
-                                {/* Linha 2 - Margem negativa para encaixar nas pontas */}
-                                <View className="flex-row gap-2 justify-center -mt-5 z-20">
-                                    <AttributeHexagon label="CON" value={constitution} onChange={setConstitution} />
-                                    <AttributeHexagon label="VIDA" value={life} onChange={setLife} />
-                                    <AttributeHexagon label="INT" value={intelligence} onChange={setIntelligence} />
+                                <View className="w-full items-center justify-center py-2">
+                                    {/* Linha 1 */}
+                                    <View className="flex-row gap-2 justify-center z-10">
+                                        <AttributeHexagon label="FOR" value={strength} onChange={setStrength} />
+                                        <AttributeHexagon label="DES" value={dexterity} onChange={setDexterity} />
+                                    </View>
+                                    {/* Linha 2 - Margem negativa para encaixar nas pontas */}
+                                    <View className="flex-row gap-2 justify-center -mt-5 z-20">
+                                        <AttributeHexagon label="CON" value={constitution} onChange={setConstitution} />
+                                        <AttributeHexagon label="VIDA" value={life} onChange={setLife} />
+                                        <AttributeHexagon label="INT" value={intelligence} onChange={setIntelligence} />
+                                    </View>
+                                    {/* Linha 3 - Margem negativa para encaixar nas pontas */}
+                                    <View className="flex-row gap-2 justify-center -mt-5 z-30">
+                                        <AttributeHexagon label="SAB" value={wisdom} onChange={setWisdom} />
+                                        <AttributeHexagon label="CAR" value={charisma} onChange={setCharisma} />
+                                    </View>
                                 </View>
-                                {/* Linha 3 - Margem negativa para encaixar nas pontas */}
-                                <View className="flex-row gap-2 justify-center -mt-5 z-30">
-                                    <AttributeHexagon label="SAB" value={wisdom} onChange={setWisdom} />
-                                    <AttributeHexagon label="CAR" value={charisma} onChange={setCharisma} />
+
+                                <Text className='text-textColor-primary text-[18px] font-bold mt-4 mb-2'>Salvaguarda</Text>
+                                <View className=' flex-row items-center mb-2 px-2'>
+                                    <View className='w-32 h-0.5 bg-gold-dark' />
+                                    <View className='w-2 h-2 bg-gold mx-3 origin-center rotate-45' />
+                                    <View className='w-32 h-0.5 bg-gold-dark' />
+                                </View>
+                                <View className="w-full flex-row flex-wrap justify-between px-2 mb-4">
+                                    {allSafeguard.map((skill) => (
+                                        <Checkbox
+                                            key={skill}
+                                            label={skill}
+                                            className="w-[48%] mb-3"
+                                            labelClasses="text-textColor-primary text-[14px] flex-shrink"
+                                            checkboxClasses="border-gold w-5 h-5"
+                                            checked={selectedSafeguards.includes(skill)}
+                                            onValueChange={(checked) => {
+                                                if (checked) setSelectedSafeguards(prev => [...prev, skill]);
+                                                else setSelectedSafeguards(prev => prev.filter(s => s !== skill));
+                                            }}
+                                        />
+                                    ))}
+                                </View>
+
+                                <Text className='text-textColor-primary text-[18px] font-bold mt-4 mb-2'>Perícias</Text>
+                                <View className=' flex-row items-center mb-2 px-2'>
+                                    <View className='w-32 h-0.5 bg-gold-dark' />
+                                    <View className='w-2 h-2 bg-gold mx-3 origin-center rotate-45' />
+                                    <View className='w-32 h-0.5 bg-gold-dark' />
+                                </View>
+                                <View className="w-full flex-row flex-wrap justify-between px-2 mb-4">
+                                    {allSkills.map((skill) => (
+                                        <Checkbox
+                                            key={skill}
+                                            label={skill}
+                                            className="w-[48%] mb-3"
+                                            labelClasses="text-textColor-primary text-[14px] flex-shrink"
+                                            checkboxClasses="border-gold w-5 h-5"
+                                            checked={selectedSkills.includes(skill)}
+                                            onValueChange={(checked) => {
+                                                if (checked) setSelectedSkills(prev => [...prev, skill]);
+                                                else setSelectedSkills(prev => prev.filter(s => s !== skill));
+                                            }}
+                                        />
+                                    ))}
                                 </View>
                             </View>
 
-                            <Text className='text-textColor-primary text-[18px] font-bold mt-4 mb-2'>Salvaguarda</Text>
-                            <View className=' flex-row items-center mb-2 px-2'>
-                                <View className='w-32 h-0.5 bg-gold-dark' />
-                                <View className='w-2 h-2 bg-gold mx-3 origin-center rotate-45' />
-                                <View className='w-32 h-0.5 bg-gold-dark' />
-                            </View>
-                            <View className="w-full flex-row flex-wrap justify-between px-2 mb-4">
-                                {allSafeguard.map((skill) => (
-                                    <Checkbox
-                                        key={skill}
-                                        label={skill}
-                                        className="w-[48%] mb-3"
-                                        labelClasses="text-textColor-primary text-[14px] flex-shrink"
-                                        checkboxClasses="border-gold w-5 h-5"
-                                        checked={selectedSafeguards.includes(skill)}
-                                        onValueChange={(checked) => {
-                                            if (checked) setSelectedSafeguards(prev => [...prev, skill]);
-                                            else setSelectedSafeguards(prev => prev.filter(s => s !== skill));
-                                        }}
-                                    />
-                                ))}
-                            </View>
-
-                            <Text className='text-textColor-primary text-[18px] font-bold mt-4 mb-2'>Perícias</Text>
-                            <View className=' flex-row items-center mb-2 px-2'>
-                                <View className='w-32 h-0.5 bg-gold-dark' />
-                                <View className='w-2 h-2 bg-gold mx-3 origin-center rotate-45' />
-                                <View className='w-32 h-0.5 bg-gold-dark' />
-                            </View>
-                            <View className="w-full flex-row flex-wrap justify-between px-2 mb-4">
-                                {allSkills.map((skill) => (
-                                    <Checkbox
-                                        key={skill}
-                                        label={skill}
-                                        className="w-[48%] mb-3"
-                                        labelClasses="text-textColor-primary text-[14px] flex-shrink"
-                                        checkboxClasses="border-gold w-5 h-5"
-                                        checked={selectedSkills.includes(skill)}
-                                        onValueChange={(checked) => {
-                                            if (checked) setSelectedSkills(prev => [...prev, skill]);
-                                            else setSelectedSkills(prev => prev.filter(s => s !== skill));
-                                        }}
-                                    />
-                                ))}
-                            </View>
+                        </ScrollView>
+                        <View className='flex-row gap-4 items-center justify-center w-full'>
+                            <Pressable
+                                className='bg-gold-light rounded-[40px] px-4 py-2 w-[120px] items-center justify-center'
+                                onPress={handleSaveData}
+                            >
+                                <Text className='text-gold-dark'>Salvar</Text>
+                            </Pressable>
+                            <Pressable
+                                className='bg-gold-dark rounded-[40px] px-4 py-2 w-[120px] items-center justify-center'
+                                onPress={handleClose}>
+                                <Text className='text-textColor-primary'>Cancelar</Text>
+                            </Pressable>
                         </View>
-
-                    </ScrollView>
-                    <View className='flex-row gap-4 items-center justify-center w-full'>
-                        <Pressable
-                            className='bg-gold-light rounded-[40px] px-4 py-2 w-[120px] items-center justify-center'
-                            onPress={handleSaveData}
-                        >
-                            <Text className='text-gold-dark'>Salvar</Text>
-                        </Pressable>
-                        <Pressable
-                            className='bg-gold-dark rounded-[40px] px-4 py-2 w-[120px] items-center justify-center'
-                            onPress={handleClose}>
-                            <Text className='text-textColor-primary'>Cancelar</Text>
-                        </Pressable>
                     </View>
-                </View>
+                </KeyboardAvoidingView>
             </SafeAreaView>
         </Modal>
     );

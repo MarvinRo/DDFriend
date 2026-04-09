@@ -60,6 +60,10 @@ export default function CreateTable({ onClose, onSave, initialData, visible }: C
     }, [searchEmail]);
 
     const handleSaveData = () => {
+        if (!campaignName.trim()) {
+            Alert.alert("Aviso", "É obrigatório a mesa ter um nome.");
+            return;
+        }
         const campaignData = {
             campaignName,
             players: selectedPlayers,

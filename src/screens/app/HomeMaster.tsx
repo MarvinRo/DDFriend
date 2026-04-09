@@ -17,6 +17,7 @@ cssInterop(SvgXml, {
 });
 const deleteIconXml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`
 const editIconXml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil-icon lucide-pencil"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>`
+const bookIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-open-text-icon lucide-book-open-text"><path d="M12 7v14"/><path d="M16 12h2"/><path d="M16 8h2"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/><path d="M6 12h2"/><path d="M6 8h2"/></svg>`
 
 export default function HomeMaster({ onPressLevel }: any) {
     const [isModalVisible, setModalVisible] = useState(false);
@@ -101,31 +102,49 @@ export default function HomeMaster({ onPressLevel }: any) {
         <SafeAreaView className='flex-1 bg-background '>
             <ExitButton />
             <View className='flex-1 items-center mt-8 w-full'>
-                <Text className='text-2xl font-bold text-primary mb-4'>Bem-vindo, Mestre!</Text>
+                <Text className='text-2xl font-bold text-primary mb-10'>Bem-vindo, Mestre!</Text>
+                
+                <TouchableOpacity className="bg-card size-48 items-center justify-center rounded-lg border-[1px] border-gold mb-10"
+                    onPress={() => navigation.navigate('Books', { isMaster: true })}>
+                    <View className="bg-gold-light w-20 h-20 items-center justify-center rounded-full mb-4">
+                        <SvgXml width={40} height={40} xml={bookIcon} />
+                    </View>
+                    <Text className="text-textColor-primary">Livros do mestre</Text>
+                    <View className=' flex-row items-center mt-6 mb-2 px-2'>
+                        <View className='w-16 h-0.5 bg-gold-dark' />
+                        <View className='w-2 h-2 bg-gold mx-3 origin-center rotate-45' />
+                        <View className='w-16 h-0.5 bg-gold-dark' />
+                    </View>
+                </TouchableOpacity>
                 <Text className='text-2xl font-bold text-primary mb-4'>Campanhas existentes.</Text>
+                <View className=' flex-row items-center mt-6 mb-2 px-2'>
+                    <View className='w-16 h-0.5 bg-gold-dark' />
+                    <View className='w-2 h-2 bg-gold mx-3 origin-center rotate-45' />
+                    <View className='w-16 h-0.5 bg-gold-dark' />
+                </View>
                 <ScrollView className="flex-1 w-full mt-8" contentContainerStyle={{ alignItems: 'center', paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
                     <Button label="Criar Nova Campanha" className="bg-gold-dark p-2 text-textColor-primary" onPress={() => {
                         setEditingCampaign(null);
                         setModalVisible(true);
                     }} />
-                    
+
                     {campaigns.map((campaign) => (
                         <View key={campaign.id} className="rounded-lg bg-card mx-[10px] my-[10px] flex-col w-[300px] min-h-[140px] border-[1px] border-gold">
                             <View className="flex-row p-3 ">
                                 <View className="flex-1 items-center flex-row gap-4" >
-                                    
+
                                     <TouchableOpacity className="flex-1" onPress={() => navigation.navigate('MasterCampaignView', { campaign })}>
                                         <Text className="text-textColor-primary text-[20px] font-bold" numberOfLines={1}>{campaign.campaignName || 'Mesa sem nome'}</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
-                            
+
                             <View className=' flex-row justify-center items-center mt-2'>
                                 <View className='w-[120px] h-0.5 bg-gold-dark' />
                                 <View className='w-2 h-2 bg-gold mx-3 origin-center rotate-45' />
                                 <View className='w-[120px] h-0.5 bg-gold-dark' />
                             </View>
-                            
+
                             <View className="flex-row mt-2">
                                 <TouchableOpacity className="flex-1 flex-row items-center justify-center p-[10px] gap-2" onPress={() => {
                                     setEditingCampaign(campaign);
