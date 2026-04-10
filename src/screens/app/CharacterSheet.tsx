@@ -5,6 +5,7 @@ import React, { useState, useRef } from 'react';
 import { View, Text, ScrollView, Image, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
+import firestore from '@react-native-firebase/firestore';
 
 
 
@@ -61,9 +62,21 @@ export default function CharacterSheet({ route }: any) {
     const armor = route;
 
     // Estado local para a Vida Temporária/Atual (inicia com o valor salvo na ficha)
-    const [currentLifeStr, setCurrentLifeStr] = useState(String(character.life || 0));
+    const [currentLifeStr, setCurrentLifeStr] = useState(String(character.currentLife !== undefined ? character.currentLife : (character.life || 0)));
     const currentLife = parseInt(currentLifeStr, 10) || 0;
     const lifeInputRef = useRef<TextInput>(null);
+
+    // Função que salva a vida em tempo real no banco para espelhar na mesa do Mestre
+    const handleUpdateLife = async (newLife: number) => {
+        setCurrentLifeStr(String(newLife));
+        if (character.id) {
+            try {
+                await firestore().collection('characterSheets').doc(character.id).update({ currentLife: newLife });
+            } catch (error) {
+                console.error("Erro ao atualizar vida no Firebase:", error);
+            }
+        }
+    };
 
     const checkMasterAccess = () => {
         if (isFromMaster) {
@@ -175,28 +188,31 @@ export default function CharacterSheet({ route }: any) {
                             <View className="flex-row items-center gap-3">
                                 <TouchableOpacity onPress={() => {
                                     if (checkMasterAccess()) return;
-                                    setCurrentLifeStr(String(Math.max(0, currentLife - 1)));
+                                    const newLife = Math.max(0, currentLife - 1);
+                                    handleUpdateLife(newLife);
                                 }} className="bg-destructive w-8 h-8 rounded-full items-center justify-center">
                                     <Text className="text-white font-bold text-xl">-</Text>
                                 </TouchableOpacity>
                                 <View className="flex-row items-center justify-center min-w-[70px]">
-                                    <Text className="text-textColor-secondary font-bold text-lg"> {character.life || 0} / </Text>
                                     <View className="relative">
                                         <TextInput
                                             ref={lifeInputRef}
-                                            className="text-textColor-secondary font-bold text-lg p-0 m-0 text-right"
+                                            className="text-textColor-secondary font-bold text-lg p-0 m-0 text-center min-w-[30px]"
                                             keyboardType="numeric"
                                             value={currentLifeStr}
                                             onChangeText={(text) => setCurrentLifeStr(text.replace(/[^0-9]/g, ''))}
+                                            onEndEditing={() => handleUpdateLife(Number(currentLifeStr) || 0)}
                                             selectTextOnFocus
                                             editable={!isFromMaster}
                                         />
                                         {isFromMaster && <TouchableOpacity style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} onPress={checkMasterAccess} activeOpacity={1} />}
                                     </View>
+                                    <Text className="text-textColor-secondary font-bold text-lg"> / {character.life || 0}</Text>
                                 </View>
                                 <TouchableOpacity onPress={() => {
                                     if (checkMasterAccess()) return;
-                                    setCurrentLifeStr(String(currentLife + 1));
+                                    const newLife = currentLife + 1;
+                                    handleUpdateLife(newLife);
                                 }} className="bg-green-600 w-8 h-8 rounded-full items-center justify-center">
                                     <Text className="text-white font-bold text-xl">+</Text>
                                 </TouchableOpacity>

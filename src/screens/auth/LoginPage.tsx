@@ -51,7 +51,7 @@ const LoginPage = () => {
 
   return (
     <SafeAreaView className='bg-background flex-1 justify-between'>
-      <View className='flex-1 justify-center items-center px-20,'>
+      <View className='flex-1 justify-center items-center px-20'>
         {/* Anel dourado com glow ao redor do logo */}
         <View
           className="

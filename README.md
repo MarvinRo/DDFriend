@@ -50,7 +50,7 @@ Create a file named **`.env`** in the **root of the project folder** to store ex
 
 # This key is typically required for Google Sign-In via Firebase
 
-GOOGLE_WEB_CLIENT_ID="YOUR_FIREBASE_WEB_CLIENT_ACCESS_KEY"
+EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID="YOUR_FIREBASE_WEB_CLIENT_ACCESS_KEY"
 MYAPP_RELEASE_STORE_FILE=my-release-key.keystore
 MYAPP_RELEASE_KEY_ALIAS=my-key-alias
 MYAPP_RELEASE_STORE_PASSWORD=STORE_PASSWORD
