@@ -90,7 +90,7 @@ export default function MasterCampaignView({ route }: any) {
             q,
                 (snapshot) => {
                     if (snapshot) {
-                        const chars = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        const chars = snapshot.docs.map((doc: { id: any; data: () => any; }) => ({ id: doc.id, ...doc.data() }));
                         setCharacters(chars);
                     }
                     setIsLoading(false);
@@ -116,7 +116,7 @@ export default function MasterCampaignView({ route }: any) {
             monstersRef,
                 (snapshot) => {
                     if (snapshot) {
-                        const mons = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        const mons = snapshot.docs.map((doc: { id: any; data: () => any; }) => ({ id: doc.id, ...doc.data() }));
                         setCampaignMonsters(mons);
                     }
                 },
@@ -175,7 +175,7 @@ export default function MasterCampaignView({ route }: any) {
             const db = getFirestore();
             const snap = await getDocs(collection(db, 'monsters'));
             
-            const allMons = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const allMons = snap.docs.map((doc: { id: any; data: () => any; }) => ({ id: doc.id, ...doc.data() }));
             console.log(allMons);
             
 
@@ -198,7 +198,7 @@ export default function MasterCampaignView({ route }: any) {
 
             const normalizedSearch = normalize(searchBestiary);
             
-            const combinedResults = allMons.filter(m => {
+            const combinedResults = allMons.filter((m: { name: string; description: string; photoUrl: any; }) => {
                 const normalizedName = normalize(m.name);
                 const normalizedDesc = normalize(m.description);
                 const url = (m.photoUrl || '').toLowerCase();
@@ -209,7 +209,7 @@ export default function MasterCampaignView({ route }: any) {
                        normalizedDesc.includes(normalizedSearch);
             });
 
-            combinedResults.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            combinedResults.sort((a:any, b:any) => (a.name || '').localeCompare(b.name || ''));
             console.log("Monstros filtrados com sucesso:", combinedResults[0]);
             setFilteredBestiary(combinedResults);
         } catch (error) {
@@ -392,7 +392,7 @@ export default function MasterCampaignView({ route }: any) {
                                 <Text className="text-white font-bold">Limpar Campo</Text>
                             </TouchableOpacity>
                             
-                            {combatants.map((char) => (
+                            {combatants.map((char: any) => (
                                 <View key={`combat-${char.combatId}`} className="rounded-lg bg-card mx-[10px] my-[10px] flex-col w-[310px] border-[1px] border-gold shadow-lg shadow-black">
                                     <View className="flex-row p-3 items-center">
                                         <Avatar>
