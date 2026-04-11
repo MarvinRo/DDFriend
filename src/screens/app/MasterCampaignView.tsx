@@ -90,7 +90,7 @@ export default function MasterCampaignView({ route }: any) {
             q,
                 (snapshot) => {
                     if (snapshot) {
-                        const chars = snapshot.docs.map((doc: { id: any; data: () => any; }) => ({ id: doc.id, ...doc.data() }));
+                        const chars = snapshot.docs.map((doc: { id: any; data: () => any; }) => ({ ...doc.data(), id: doc.id }));
                         setCharacters(chars);
                     }
                     setIsLoading(false);
@@ -116,7 +116,7 @@ export default function MasterCampaignView({ route }: any) {
             monstersRef,
                 (snapshot) => {
                     if (snapshot) {
-                        const mons = snapshot.docs.map((doc: { id: any; data: () => any; }) => ({ id: doc.id, ...doc.data() }));
+                        const mons = snapshot.docs.map((doc: { id: any; data: () => any; }) => ({ ...doc.data(), id: doc.id }));
                         setCampaignMonsters(mons);
                     }
                 },
@@ -149,14 +149,14 @@ export default function MasterCampaignView({ route }: any) {
 
     const openBestiary = async () => {
         setBestiaryVisible(true);
-        setSearchBestiary(''); // Reseta o campo de busca ao abrir o modal
-        setFilteredBestiary([]); // A lista abre limpa esperando a pesquisa do Mestre
+        setSearchBestiary('');
+        setFilteredBestiary([]);
         setHasSearched(false);
         setIsSearching(false);
     };
 
     const handleSearchBestiary = async () => {
-        Keyboard.dismiss(); // Esconde o teclado na mesma hora para você ver que o clique funcionou
+        Keyboard.dismiss();
 
         if (!searchBestiary || searchBestiary.trim().length === 0) {
             setFilteredBestiary([]);
@@ -164,14 +164,11 @@ export default function MasterCampaignView({ route }: any) {
             return;
         }
 
-        setFilteredBestiary([]); // Limpa resultados velhos imediatamente
+        setFilteredBestiary([]);
         setIsSearching(true);
         setHasSearched(true);
         try {
-            // Força um pequeno atraso visual para o mestre saber que o app está trabalhando, dando tempo do teclado fechar e a UI atualizar
             await new Promise(resolve => setTimeout(resolve, 500));
-
-            // Traz todos os monstros para a memória (é rápido) permitindo uma busca profunda e esmagadora
             const db = getFirestore();
             const snap = await getDocs(collection(db, 'monsters'));
             
@@ -222,14 +219,17 @@ export default function MasterCampaignView({ route }: any) {
     const handleAddMonsterToTable = async (monster: any) => {
         try {
             const db = getFirestore();
+            const monsterData = { ...monster };
+            delete monsterData.id; // Garante que o ID da subcoleção não seja sobrescrito
+
             await addDoc(collection(db, 'campaigns', campaign.id, 'monsters'), {
-                ...monster,
+                ...monsterData,
                 rootId: monster.id,
                 currentHp: monster.hp || 0,
                 initiative: 0,
                 addedAt: serverTimestamp()
             });
-            Alert.alert("Sucesso", `${monster.name} adicionado à batalha!`);
+            Alert.alert("Sucesso", `${monster.name} adicionado à mesa!`);
             setBestiaryVisible(false);
         } catch(e) {
             Alert.alert("Erro", "Não foi possível adicionar o monstro.");
@@ -318,6 +318,14 @@ export default function MasterCampaignView({ route }: any) {
                     onPress: async () => {
                         try {
                             const db = getFirestore();
+
+                            // Remove do combate automaticamente
+                            const currentState = campaignData.combatState || [];
+                            const updatedState = currentState.filter((c: any) => c.id !== characterId);
+                            if (updatedState.length !== currentState.length) {
+                                await updateDoc(doc(db, 'campaigns', campaign.id), { combatState: updatedState });
+                            }
+
                             // Define o campaignId como nulo para desvincular, respeitando a regra do Firebase
                             await updateDoc(doc(db, 'characterSheets', characterId), {
                                 campaignId: null
@@ -345,14 +353,29 @@ export default function MasterCampaignView({ route }: any) {
     };
 
     const handleDeleteMonster = (id: string) => {
-        Alert.alert("Remover Monstro", "Deseja remover este monstro da batalha?", [
+        Alert.alert("Remover Monstro", "Deseja remover este monstro da mesa de forma definitiva?", [
             { text: "Cancelar", style: "cancel" },
-            { text: "Remover", style: "destructive", onPress: async () => {
-                await deleteDoc(doc(getFirestore(), 'campaigns', campaign.id, 'monsters', id));
-                const currentState = campaignData.combatState || [];
-                const newState = currentState.filter((c: any) => c.baseId !== id && c.id !== id && !c.id.startsWith(`${id}_`));
-                await updateDoc(doc(getFirestore(), 'campaigns', campaign.id), { combatState: newState });
-            }}
+            {
+                text: "Remover",
+                style: "destructive",
+                onPress: async () => {
+                    try {
+                        const db = getFirestore();
+
+                        // Limpa os IDs do monstro do Campo de Batalha caso ele esteja em combate
+                        const currentState = campaignData.combatState || [];
+                        const updatedState = currentState.filter((c: any) => c.baseId !== id && c.id !== id && !(typeof c.id === 'string' && c.id.startsWith(`${id}_`)));
+                        if (updatedState.length !== currentState.length) {
+                            await updateDoc(doc(db, 'campaigns', campaign.id), { combatState: updatedState });
+                        }
+
+                        await deleteDoc(doc(db, 'campaigns', campaign.id, 'monsters', id));
+                    } catch (error) {
+                        console.error("Erro ao remover monstro:", error);
+                        Alert.alert("Erro", "Não foi possível remover o monstro da mesa.");
+                    }
+                }
+            }
         ]);
     };
 

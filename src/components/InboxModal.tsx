@@ -53,6 +53,39 @@ export default function InboxModal({ visible, onClose, characters, onUpdate }: I
     const handleAccept = async (characterId: string) => {
         if (!selectedCampaign) return;
         try {
+            const user = auth().currentUser;
+            const characterToUse = characters.find(c => c.id === characterId);
+
+            // Se o personagem já estava em uma mesa diferente, remove o jogador da mesa anterior
+            if (user && characterToUse && characterToUse.campaignId && characterToUse.campaignId !== selectedCampaign.id) {
+                try {
+                    const oldCampaignId = characterToUse.campaignId;
+                    
+                    // Verifica se o jogador possui OUTRA ficha nesta mesma campanha antiga
+                    const hasOtherCharactersInOldCampaign = characters.some(c => c.id !== characterId && c.campaignId === oldCampaignId);
+
+                    if (!hasOtherCharactersInOldCampaign) {
+                        const oldCampaignRef = firestore().collection('campaigns').doc(oldCampaignId);
+                        const oldCampaignDoc = await oldCampaignRef.get();
+                        
+                        if (oldCampaignDoc.exists()) {
+                            const campaignData = oldCampaignDoc.data();
+                            const playerToRemove = (campaignData?.players || []).find((p: any) => p.id === user.uid || p.uid === user.uid);
+                            
+                            const updates: any = {
+                                playerIds: firestore.FieldValue.arrayRemove(user.uid)
+                            };
+                            if (playerToRemove) {
+                                updates.players = firestore.FieldValue.arrayRemove(playerToRemove);
+                            }
+                            await oldCampaignRef.update(updates);
+                        }
+                    }
+                } catch (e) {
+                    console.log("Falha ao remover o jogador da mesa antiga. Ignorando erro para focar no aceite da nova...", e);
+                }
+            }
+
             // Adiciona o campaignId na ficha escolhida pelo jogador
             await firestore().collection('characterSheets').doc(characterId).update({
                 campaignId: selectedCampaign.id
@@ -60,8 +93,9 @@ export default function InboxModal({ visible, onClose, characters, onUpdate }: I
             Alert.alert("Sucesso!", "Você entrou na mesa com sucesso.");
             onUpdate();
             onClose();
-        } catch (error) {
-            Alert.alert("Erro", "Não foi possível aceitar o convite.");
+        } catch (error: any) {
+            console.error("Erro no handleAccept:", error);
+            Alert.alert("Erro", `Não foi possível aceitar o convite. Detalhes: ${error?.message || 'Erro desconhecido'}`);
         }
     };
 

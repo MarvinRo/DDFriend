@@ -51,19 +51,10 @@ export default function CharacterMagic({ route }: any) {
         const query = firestore().collection('characterSheets').doc(character.id).collection('spellsAndAbilities');
 
         try {
-            const snapshotCache = await query.get({ source: 'cache' });
-            if (!snapshotCache.empty) {
-                populateMagic(snapshotCache.docs[0]);
-                return;
-            }
-        } catch (e) {
-            console.log("Magias não encontradas no cache, buscando do servidor...");
-        }
-
-        try {
-            const snapshotServer = await query.get({ source: 'server' });
-            if (!snapshotServer.empty) {
-                populateMagic(snapshotServer.docs[0]);
+            // Busca do servidor para garantir atualização constante dos dados
+            const snapshot = await query.get();
+            if (!snapshot.empty) {
+                populateMagic(snapshot.docs[0]);
             }
         } catch (error) {
             console.error("Erro ao carregar magias:", error);

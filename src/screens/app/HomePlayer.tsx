@@ -34,32 +34,20 @@ export default function HomePlayer({ onPressLevel }: any) {
     const [editingXpLevel, setEditingXpLevel] = useState<any>(null);
     const [hasNewInvites, setHasNewInvites] = useState(false);
 
-    const loadCharacters = async () => {
+    useEffect(() => {
         const user = auth().currentUser;
         if (!user) return;
 
-        const query = firestore().collection('characterSheets').where('ownerId', '==', user.uid);
+        const unsubscribe = firestore()
+            .collection('characterSheets')
+            .where('ownerId', '==', user.uid)
+            .onSnapshot((snapshot) => {
+                if (snapshot) {
+                    setCharacters(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                }
+            }, (error) => console.error("Erro ao carregar personagens:", error));
 
-        try {
-            const snapshotCache = await query.get({ source: 'cache' });
-            if (!snapshotCache.empty) {
-                setCharacters(snapshotCache.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-                return;
-            }
-        } catch (e) {
-            console.log("Cache vazio, buscando do servidor...");
-        }
-
-        try {
-            const snapshotServer = await query.get({ source: 'server' });
-            setCharacters(snapshotServer.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        } catch (error) {
-            console.error("Erro ao carregar personagens:", error);
-        }
-    };
-
-    useEffect(() => {
-        loadCharacters();
+        return () => unsubscribe();
     }, []);
 
     useEffect(() => {
@@ -98,9 +86,9 @@ export default function HomePlayer({ onPressLevel }: any) {
                     createdAt: firestore.FieldValue.serverTimestamp(),
                     level: 1,
                     experience: 0,
+                    efficiencyBonus: 2,
                 });
             }
-            loadCharacters(); // Atualiza a lista localmente
         } catch (error) {
             console.error("Erro ao salvar personagem:", error);
         }
@@ -112,8 +100,8 @@ export default function HomePlayer({ onPressLevel }: any) {
             await firestore().collection('characterSheets').doc(editingXpLevel.id).update({
                 level: sheetData.level,
                 experience: sheetData.experience,
+                efficiencyBonus: sheetData.efficiencyBonus,
             });
-            loadCharacters(); // Atualiza a lista localmente
         } catch (error) {
             console.error("Erro ao atualizar XP/Nível:", error);
             Alert.alert("Erro", "Não foi possível atualizar a experiência.");
@@ -132,7 +120,6 @@ export default function HomePlayer({ onPressLevel }: any) {
                     onPress: async () => {
                         try {
                             await firestore().collection('characterSheets').doc(id).delete();
-                            loadCharacters();
                         } catch (error) {
                             console.error("Erro ao excluir personagem:", error);
                             Alert.alert("Erro", "Não foi possível excluir a ficha.");
@@ -287,7 +274,7 @@ export default function HomePlayer({ onPressLevel }: any) {
                 visible={isInboxVisible} 
                 onClose={() => setInboxVisible(false)} 
                 characters={characters} 
-                onUpdate={loadCharacters} 
+            onUpdate={() => {}} 
             />
             <ExitButton />
         </SafeAreaView >

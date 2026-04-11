@@ -110,12 +110,11 @@ export default function CreatEditCaracter({ onClose, onSave, initialData, visibl
         setSelectedSafeguards([]);
         setCharacterPhoto(null);
             setCharacterMovement('');
-            setEfficiencyBonus('');
         onClose();
     };
 
     const [life, setLife] = useState(0)
-    const [efficiencyBonus, setEfficiencyBonus] = useState('')
+    
     const [characterMovement, setCharacterMovement] = useState('')
     const [characterName, setCharacterName] = useState('');
     const [characterRace, setCharacterRace] = useState('');
@@ -135,7 +134,6 @@ export default function CreatEditCaracter({ onClose, onSave, initialData, visibl
     useEffect(() => {
         if (initialData && Object.keys(initialData).length > 0) {
             setLife(initialData.life || 0);
-            setEfficiencyBonus(initialData.efficiencyBonus ? initialData.efficiencyBonus.toString() : '');
             setCharacterName(initialData.characterName || '');
             setCharacterRace(initialData.characterRace || '');
             setCharacterClass(initialData.characterClass || '');
@@ -212,7 +210,6 @@ export default function CreatEditCaracter({ onClose, onSave, initialData, visibl
             characterTrend: alignment || '',
             characterPhoto,
             life: Number(life) || 0,
-            efficiencyBonus: efficiencyBonus || '0',
             movement: Number(characterMovement) || '',
             strength: Number(strength) || 0,
             dexterity: Number(dexterity) || 0,

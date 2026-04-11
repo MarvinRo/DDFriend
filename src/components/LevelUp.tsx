@@ -17,6 +17,7 @@ interface LevelEditProps {
 export default function LevelEdit({ onClose, onSave, initialData, visible }: LevelEditProps) {
     const [level, setLevel] = useState("0")
     const [experience, setExperience] = useState("0")
+    const [efficiencyBonus, setEfficiencyBonus] = useState('')
 
     const handleClose = () => {
         setLevel("0");
@@ -35,10 +36,23 @@ export default function LevelEdit({ onClose, onSave, initialData, visible }: Lev
     }, [visible, initLevel, initExp]);
 
 
+
+    const getEfficiencyBonus = (currentLevel: number) => {
+        if (currentLevel >= 1 && currentLevel <= 4) return 2;
+        if (currentLevel > 4 && currentLevel <= 8) return 3;
+        if (currentLevel > 8 && currentLevel <= 12) return 4;
+        if (currentLevel > 12 && currentLevel <= 16) return 5;
+        if (currentLevel > 16 && currentLevel <= 20) return 6;
+        return 0;
+    };
+
+
     const handleSaveData = () => {
+        const currentLevel = Number(level) || 1;
         const sheetData = {
-            level: Number(level) || 0,
+            level: currentLevel,
             experience: Number(experience) || 0,
+            efficiencyBonus: getEfficiencyBonus(currentLevel),
         };
         onSave(sheetData);
         handleClose();

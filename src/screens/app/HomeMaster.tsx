@@ -74,7 +74,6 @@ export default function HomeMaster({ onPressLevel }: any) {
                     createdAt: firestore.FieldValue.serverTimestamp(),
                 });
             }
-            loadCampaigns(); // Atualiza a lista localmente
         } catch (error) {
             console.error("Erro ao salvar campanha:", error);
         }
@@ -92,7 +91,6 @@ export default function HomeMaster({ onPressLevel }: any) {
                     onPress: async () => {
                         try {
                             await firestore().collection('campaigns').doc(id).delete();
-                            loadCampaigns();
                         } catch (error) {
                             console.error("Erro ao excluir campanha:", error);
                         }

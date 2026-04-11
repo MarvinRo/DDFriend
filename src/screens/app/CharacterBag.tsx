@@ -70,19 +70,10 @@ export default function CharacterBag({ route }: any) {
         const query = firestore().collection('characterSheets').doc(character.id).collection('bagpack');
 
         try {
-            const snapshotCache = await query.get({ source: 'cache' });
-            if (!snapshotCache.empty) {
-                populateBagpack(snapshotCache.docs[0]);
-                return;
-            }
-        } catch (e) {
-            console.log("Bolsa não encontrada no cache, buscando do servidor...");
-        }
-
-        try {
-            const snapshotServer = await query.get({ source: 'server' });
-            if (!snapshotServer.empty) {
-                populateBagpack(snapshotServer.docs[0]);
+            // Busca do servidor para garantir que não usemos dados velhos travados no cache local
+            const snapshot = await query.get();
+            if (!snapshot.empty) {
+                populateBagpack(snapshot.docs[0]);
             }
         } catch (error) {
             console.error("Erro ao carregar bolsa:", error);
