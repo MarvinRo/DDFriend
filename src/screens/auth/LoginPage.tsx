@@ -7,8 +7,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import { GoogleAuthProvider, signInWithCredential } from '@react-native-firebase/auth';
+import { doc, setDoc, serverTimestamp } from '@react-native-firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 import GoogleButton from '@/components/googleButtom';
 type GoogleUser = {
   idToken: string | null;
@@ -27,18 +28,18 @@ const LoginPage = () => {
         throw new Error('Token do Google não encontrado');
       }
 
-      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-      const firebaseUserCredential = await auth().signInWithCredential(googleCredential);
+      const googleCredential = GoogleAuthProvider.credential(idToken);
+      const firebaseUserCredential = await signInWithCredential(auth, googleCredential);
       const { user } = firebaseUserCredential;
 
       if (user) {
-        const userDocument = firestore().collection('users').doc(user.uid);
-        await userDocument.set({
+        const userDocument = doc(db, 'users', user.uid);
+        await setDoc(userDocument, {
           nome: user.displayName,
           email: user.email,
           fotoURL: user.photoURL,
           uid: user.uid,
-          ultimoLogin: firestore.FieldValue.serverTimestamp(),
+          ultimoLogin: serverTimestamp(),
         }, { merge: true });
       }
     } catch (error) {

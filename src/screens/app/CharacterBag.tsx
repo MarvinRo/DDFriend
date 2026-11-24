@@ -1,11 +1,12 @@
 import ExitButton from '@/components/ExitButton';
 import { Progress } from '@/components/ui/Progress';
 import { useNavigation } from '@react-navigation/native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, Image, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
-import firestore from '@react-native-firebase/firestore';
+import { collection, doc, onSnapshot, updateDoc, addDoc } from '@react-native-firebase/firestore';
+import { db } from '@/lib/firebase';
 
 
 const ShieldInput = ({ label, value, onChange, onBlur, isFromMaster, onCheckMaster }: any) => {
@@ -65,23 +66,49 @@ export default function CharacterBag({ route }: any) {
         setCopper(data.copper || 0);
     };
 
-    const loadBagpack = async () => {
-        if (!character.id) return;
-        const query = firestore().collection('characterSheets').doc(character.id).collection('bagpack');
+    // Últimos valores gravados por este aparelho: a confirmação do servidor traz esses mesmos dados,
+    // e aplicá-los apagaria o que o jogador está digitando em outro campo nesse meio-tempo
+    const lastWrittenBagRef = useRef<string | null>(null);
+    const lastWrittenArmorRef = useRef<number | null>(null);
 
-        try {
-            // Busca do servidor para garantir que não usemos dados velhos travados no cache local
-            const snapshot = await query.get();
-            if (!snapshot.empty) {
-                populateBagpack(snapshot.docs[0]);
-            }
-        } catch (error) {
-            console.error("Erro ao carregar bolsa:", error);
-        }
-    };
-
+    // Bolsa em tempo real (o mestre vê as mudanças do jogador sem reabrir a tela)
     useEffect(() => {
-        loadBagpack();
+        if (!character.id) return;
+        const unsubscribe = onSnapshot(
+            collection(db, 'characterSheets', character.id, 'bagpack'),
+            (snapshot) => {
+                if (!snapshot || snapshot.metadata.hasPendingWrites || snapshot.empty) return;
+                const bagDoc = snapshot.docs[0];
+                const data = bagDoc.data();
+                const incoming = JSON.stringify({
+                    items: data.items || '', platina: data.platina || 0, gold: data.gold || 0,
+                    silver: data.silver || 0, electrum: data.electrum || 0, copper: data.copper || 0,
+                });
+                if (incoming === lastWrittenBagRef.current) {
+                    setBagpackDocId(bagDoc.id);
+                    return;
+                }
+                populateBagpack(bagDoc);
+            },
+            (error) => console.error("Erro ao carregar bolsa:", error)
+        );
+        return () => unsubscribe();
+    }, [character.id]);
+
+    // CA fica no documento da ficha
+    useEffect(() => {
+        if (!character.id) return;
+        const unsubscribe = onSnapshot(
+            doc(db, 'characterSheets', character.id),
+            (snapshot) => {
+                if (!snapshot?.exists() || snapshot.metadata.hasPendingWrites) return;
+                const remoteArmor = snapshot.data()?.armorClass;
+                if (remoteArmor === undefined || remoteArmor === lastWrittenArmorRef.current) return;
+                setArmorClass(remoteArmor);
+            },
+            (error) => console.error("Erro ao acompanhar a CA:", error)
+        );
+        return () => unsubscribe();
     }, [character.id]);
 
     const checkMasterAccess = () => {
@@ -106,19 +133,22 @@ export default function CharacterBag({ route }: any) {
             copper,
         };
 
+        lastWrittenBagRef.current = JSON.stringify(bagpackData);
+        lastWrittenArmorRef.current = armorClass;
+
         try {
-            await firestore().collection('characterSheets').doc(character.id).update({
+            await updateDoc(doc(db, 'characterSheets', character.id), {
                 armorClass: armorClass
             });
 
-            const bagpackRef = firestore().collection('characterSheets').doc(character.id).collection('bagpack');
+            const bagpackRef = collection(db, 'characterSheets', character.id, 'bagpack');
 
             if (bagpackDocId) {
                 // Se já existir um documento na subcoleção, apenas atualiza
-                await bagpackRef.doc(bagpackDocId).update(bagpackData);
+                await updateDoc(doc(bagpackRef, bagpackDocId), bagpackData);
             } else {
                 // Se o personagem ainda não tiver nenhum documento na bolsa, cria um
-                const newDoc = await bagpackRef.add(bagpackData);
+                const newDoc = await addDoc(bagpackRef, bagpackData);
                 setBagpackDocId(newDoc.id);
             }
         } catch (error) {

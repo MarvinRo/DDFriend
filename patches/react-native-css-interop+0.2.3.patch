@@ -1,0 +1,75 @@
+diff --git a/node_modules/react-native-css-interop/.cache/android.js b/node_modules/react-native-css-interop/.cache/android.js
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native-css-interop/.cache/ios.js b/node_modules/react-native-css-interop/.cache/ios.js
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native-css-interop/.cache/macos.js b/node_modules/react-native-css-interop/.cache/macos.js
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native-css-interop/.cache/native.js b/node_modules/react-native-css-interop/.cache/native.js
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native-css-interop/.cache/windows.js b/node_modules/react-native-css-interop/.cache/windows.js
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native-css-interop/dist/metro/index.js b/node_modules/react-native-css-interop/dist/metro/index.js
+index c91ba6a..da3de8f 100644
+--- a/node_modules/react-native-css-interop/dist/metro/index.js
++++ b/node_modules/react-native-css-interop/dist/metro/index.js
+@@ -12,6 +12,8 @@ const debug_1 = require("debug");
+ const css_to_rn_1 = require("../css-to-rn");
+ const expo_1 = require("./expo");
+ let haste;
++// Raiz do projeto Metro (rootDir do metro-file-map), usada no formato novo do evento "change"
++let projectRoot = process.cwd();
+ let virtualModulesPossible = undefined;
+ const virtualModules = new Map();
+ const outputDirectory = path_1.default.resolve(__dirname, "../../.cache");
+@@ -24,6 +26,9 @@ function withCssInterop(config, options) {
+         : getConfig(config, options);
+ }
+ function getConfig(config, options) {
++    if (config && config.projectRoot) {
++        projectRoot = config.projectRoot;
++    }
+     const debug = (0, debug_1.debug)(options.parent?.name || "react-native-css-interop");
+     debug("withCssInterop");
+     debug(`outputDirectory ${outputDirectory}`);
+@@ -176,18 +181,35 @@ async function startCSSProcessor(filePath, platform, isDev, { input, getCSSForPl
+                 ? css
+                 : getNativeJS((0, css_to_rn_1.cssToReactNativeRuntime)(css, options), debug)));
+             debug(`virtualStyles.emit ${platform}`);
++            // Metro >= 0.83 espera { changes: { addedFiles, modifiedFiles, removedFiles }, rootDir };
++            // versões antigas esperam { eventsQueue }. Envia os dois formatos.
++            const modifiedTime = Date.now();
+             haste.emit("change", {
+                 eventsQueue: [
+                     {
+                         filePath,
+                         metadata: {
+-                            modifiedTime: Date.now(),
++                            modifiedTime,
+                             size: 1,
+                             type: "virtual",
+                         },
+                         type: "change",
+                     },
+                 ],
++                changes: {
++                    addedDirectories: new Set(),
++                    removedDirectories: new Set(),
++                    addedFiles: [],
++                    modifiedFiles: [
++                        [
++                            path_1.default.relative(projectRoot, filePath),
++                            { modifiedTime, size: 1, isSymlink: false },
++                        ],
++                    ],
++                    removedFiles: [],
++                },
++                logger: null,
++                rootDir: projectRoot,
+             });
+         }).then((css) => {
+             debug(`virtualStyles.initial ${platform}`);

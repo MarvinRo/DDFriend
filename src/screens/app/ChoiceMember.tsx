@@ -1,18 +1,18 @@
 import { View, Text, TouchableOpacity, Image,Alert } from "react-native";
 import { useNavigation } from '@react-navigation/native';
 import ExitButton from "@/components/ExitButton";
-import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import { doc, setDoc } from '@react-native-firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 
 
 export default function ChoiceMember() {
     const navigation = useNavigation<any>();
     
     const handleEnterAsMaster = async () => {
-        const user = auth().currentUser;
+        const user = auth.currentUser;
         if (user) {
             // Define no banco de dados que este usuário é um mestre
-            await firestore().collection('users').doc(user.uid).set({
+            await setDoc(doc(db, 'users', user.uid), {
                 isMaster: true
             }, { merge: true }).catch(e => console.log("Erro ao atualizar status de mestre:", e));
         }

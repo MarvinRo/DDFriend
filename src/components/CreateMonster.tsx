@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/Input';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
 import { launchImageLibrary, ImageLibraryOptions } from 'react-native-image-picker';
+import { DND_API_BASE, translateText } from '@/lib/dndApi';
 
 interface CreateMonsterProps {
     visible: boolean;
@@ -13,24 +14,26 @@ interface CreateMonsterProps {
 }
 const deleteIconXml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`
 
-// Função para traduzir textos em inglês para PT-BR usando uma API pública gratuita do Google
-const translateText = async (text: string) => {
-    if (!text) return '';
-    try {
-        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=pt-br&dt=t`;
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `q=${encodeURIComponent(text)}`
-        });
-        const data = await res.json();
-        return data[0].map((item: any) => item[0]).join('');
-    } catch (error) {
-        console.error("Erro ao traduzir:", error);
-        return text; // Retorna o texto original em caso de falha
-    }
+// A API devolve armor_class como array de objetos ({ type, value }) ou, em versões antigas, como número
+const parseArmorClass = (armorClass: any): number | null => {
+    const value = Array.isArray(armorClass) ? armorClass[0]?.value : armorClass;
+    return typeof value === 'number' ? value : null;
+};
+
+// CR pode ser fracionário (0.125, 0.25, 0.5): exibe como 1/8, 1/4, 1/2
+const formatChallengeRating = (cr: number | null | undefined): string => {
+    if (cr === null || cr === undefined) return '';
+    const fractions: Record<number, string> = { 0.125: '1/8', 0.25: '1/4', 0.5: '1/2' };
+    return fractions[cr] ?? String(cr);
+};
+
+// Aceita "1/4", "0,25", "0.25" ou "5"; vazio ou inválido vira null
+const parseChallengeRating = (text: string): number | null => {
+    const clean = text.trim().replace(',', '.');
+    if (!clean) return null;
+    const fraction = clean.match(/^(\d+)\s*\/\s*(\d+)$/);
+    const value = fraction ? Number(fraction[1]) / Number(fraction[2]) : Number(clean);
+    return Number.isFinite(value) && value >= 0 ? value : null;
 };
 
 export default function CreateMonster({ visible, onClose, onSave, initialData }: CreateMonsterProps) {
@@ -45,6 +48,10 @@ export default function CreateMonster({ visible, onClose, onSave, initialData }:
     const [int, setInt] = useState('');
     const [wis, setWis] = useState('');
     const [cha, setCha] = useState('');
+    const [challengeRating, setChallengeRating] = useState('');
+    const [xp, setXp] = useState('');
+    // Identificador estável do monstro na API (ex.: "adult-red-dragon"), usado para busca e duplicidade
+    const [apiIndex, setApiIndex] = useState('');
 
     const [apiSearch, setApiSearch] = useState('');
     const [apiResults, setApiResults] = useState<any[]>([]);
@@ -64,6 +71,9 @@ export default function CreateMonster({ visible, onClose, onSave, initialData }:
             setInt(String(initialData.int || ''));
             setWis(String(initialData.wis || ''));
             setCha(String(initialData.cha || ''));
+            setChallengeRating(formatChallengeRating(initialData.challengeRating));
+            setXp(initialData.xp !== undefined && initialData.xp !== null ? String(initialData.xp) : '');
+            setApiIndex(initialData.apiIndex || '');
         } else {
             handleReset();
         }
@@ -72,8 +82,11 @@ export default function CreateMonster({ visible, onClose, onSave, initialData }:
     // Busca a lista base de monstros da API ao abrir o modal
     useEffect(() => {
         if (visible && allMonsters.length === 0) {
-            fetch('https://www.dnd5eapi.co/api/monsters')
-                .then(res => res.json())
+            fetch(`${DND_API_BASE}/api/2014/monsters`)
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                })
                 .then(data => setAllMonsters(data.results || []))
                 .catch(err => console.error("Erro ao carregar lista D&D API:", err));
         }
@@ -101,6 +114,9 @@ export default function CreateMonster({ visible, onClose, onSave, initialData }:
         setInt('');
         setWis('');
         setCha('');
+        setChallengeRating('');
+        setXp('');
+        setApiIndex('');
         setApiSearch('');
         setApiResults([]);
     };
@@ -123,6 +139,9 @@ export default function CreateMonster({ visible, onClose, onSave, initialData }:
             int: Number(int) || 10,
             wis: Number(wis) || 10,
             cha: Number(cha) || 10,
+            challengeRating: parseChallengeRating(challengeRating),
+            xp: Number(xp) || 0,
+            apiIndex: apiIndex || null,
         };
 
         onSave(data);
@@ -140,13 +159,16 @@ export default function CreateMonster({ visible, onClose, onSave, initialData }:
         setApiSearch('');
         setApiResults([]);
         try {
-            const res = await fetch(`https://www.dnd5eapi.co/api/monsters/${index}`);
+            const res = await fetch(`${DND_API_BASE}/api/2014/monsters/${index}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
 
+            setApiIndex(data.index || index);
             setName(data.name || '');
             setHp(String(data.hit_points || ''));
-            // A API as vezes retorna array para armor_class, as vezes numero
-            setAc(String(data.armor_class?.[0]?.value || data.armor_class || '10'));
+            setAc(String(parseArmorClass(data.armor_class) ?? 10));
+            setChallengeRating(formatChallengeRating(data.challenge_rating));
+            setXp(data.xp !== undefined && data.xp !== null ? String(data.xp) : '');
             setStr(String(data.strength || '10'));
             setDex(String(data.dexterity || '10'));
             setCon(String(data.constitution || '10'));
@@ -175,6 +197,14 @@ export default function CreateMonster({ visible, onClose, onSave, initialData }:
                 descRaw += '\n--- Ações ---\n';
                 data.actions.forEach((a: any) => descRaw += `• ${a.name}: ${a.desc}\n`);
             }
+            if (data.reactions?.length) {
+                descRaw += '\n--- Reações ---\n';
+                data.reactions.forEach((a: any) => descRaw += `• ${a.name}: ${a.desc}\n`);
+            }
+            if (data.legendary_actions?.length) {
+                descRaw += '\n--- Ações Lendárias ---\n';
+                data.legendary_actions.forEach((a: any) => descRaw += `• ${a.name}: ${a.desc}\n`);
+            }
 
             // Realiza a tradução do nome e de todas as habilidades de uma só vez
             const translatedName = await translateText(data.name);
@@ -184,7 +214,7 @@ export default function CreateMonster({ visible, onClose, onSave, initialData }:
             setDescription(translatedDesc || descRaw);
 
             if (data.image) {
-                setPhotoUrl(`https://www.dnd5eapi.co${data.image}`);
+                setPhotoUrl(`${DND_API_BASE}${data.image}`);
             } else {
                 setPhotoUrl('');
             }
@@ -317,6 +347,17 @@ export default function CreateMonster({ visible, onClose, onSave, initialData }:
                                 <View className="w-[48%]">
                                     <Text className="text-textColor-secondary text-xs mb-1">Classe de Armadura (CA)</Text>
                                     <Input className='border-gold border-[1px] rounded-lg w-full text-center' placeholder='CA' keyboardType="numeric" value={ac} onChangeText={setAc} />
+                                </View>
+                            </View>
+
+                            <View className="flex-row justify-between w-full mb-3">
+                                <View className="w-[48%]">
+                                    <Text className="text-textColor-secondary text-xs mb-1">Nível de Desafio (ND)</Text>
+                                    <Input className='border-gold border-[1px] rounded-lg w-full text-center' placeholder='ex: 1/4' value={challengeRating} onChangeText={setChallengeRating} />
+                                </View>
+                                <View className="w-[48%]">
+                                    <Text className="text-textColor-secondary text-xs mb-1">Experiência (XP)</Text>
+                                    <Input className='border-gold border-[1px] rounded-lg w-full text-center' placeholder='XP' keyboardType="numeric" value={xp} onChangeText={setXp} />
                                 </View>
                             </View>
 

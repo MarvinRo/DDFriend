@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Modal, Pressable, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import firestore from '@react-native-firebase/firestore';
-import auth from '@react-native-firebase/auth';
+import { collection, query, where, getDocs, doc, getDoc, updateDoc, arrayRemove } from '@react-native-firebase/firestore';
+import { auth, db, docsWithId } from '@/lib/firebase';
 import { SvgXml } from 'react-native-svg';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/Avatar';
 
@@ -21,14 +21,14 @@ export default function InboxModal({ visible, onClose, characters, onUpdate }: I
     const [isLoading, setIsLoading] = useState(false);
 
     const fetchInvitations = async () => {
-        const user = auth().currentUser;
+        const user = auth.currentUser;
         if (!user) return;
         
         setIsLoading(true);
         try {
             // 1. Busca todas as campanhas em que o ID do jogador atual está na lista
-            const campaignsSnap = await firestore().collection('campaigns').where('playerIds', 'array-contains', user.uid).get();
-            const campaignsData = campaignsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const campaignsSnap = await getDocs(query(collection(db, 'campaigns'), where('playerIds', 'array-contains', user.uid)));
+            const campaignsData = docsWithId(campaignsSnap);
 
             // 2. Verifica as campanhas que o jogador já aceitou (se alguma ficha dele já possui esse campaignId)
             const acceptedCampaignIds = characters.filter((c: any) => c.campaignId).map((c: any) => c.campaignId);
@@ -53,7 +53,7 @@ export default function InboxModal({ visible, onClose, characters, onUpdate }: I
     const handleAccept = async (characterId: string) => {
         if (!selectedCampaign) return;
         try {
-            const user = auth().currentUser;
+            const user = auth.currentUser;
             const characterToUse = characters.find(c => c.id === characterId);
 
             // Se o personagem já estava em uma mesa diferente, remove o jogador da mesa anterior
@@ -65,20 +65,20 @@ export default function InboxModal({ visible, onClose, characters, onUpdate }: I
                     const hasOtherCharactersInOldCampaign = characters.some(c => c.id !== characterId && c.campaignId === oldCampaignId);
 
                     if (!hasOtherCharactersInOldCampaign) {
-                        const oldCampaignRef = firestore().collection('campaigns').doc(oldCampaignId);
-                        const oldCampaignDoc = await oldCampaignRef.get();
+                        const oldCampaignRef = doc(db, 'campaigns', oldCampaignId);
+                        const oldCampaignDoc = await getDoc(oldCampaignRef);
                         
                         if (oldCampaignDoc.exists()) {
                             const campaignData = oldCampaignDoc.data();
                             const playerToRemove = (campaignData?.players || []).find((p: any) => p.id === user.uid || p.uid === user.uid);
                             
                             const updates: any = {
-                                playerIds: firestore.FieldValue.arrayRemove(user.uid)
+                                playerIds: arrayRemove(user.uid)
                             };
                             if (playerToRemove) {
-                                updates.players = firestore.FieldValue.arrayRemove(playerToRemove);
+                                updates.players = arrayRemove(playerToRemove);
                             }
-                            await oldCampaignRef.update(updates);
+                            await updateDoc(oldCampaignRef, updates);
                         }
                     }
                 } catch (e) {
@@ -87,7 +87,7 @@ export default function InboxModal({ visible, onClose, characters, onUpdate }: I
             }
 
             // Adiciona o campaignId na ficha escolhida pelo jogador
-            await firestore().collection('characterSheets').doc(characterId).update({
+            await updateDoc(doc(db, 'characterSheets', characterId), {
                 campaignId: selectedCampaign.id
             });
             Alert.alert("Sucesso!", "Você entrou na mesa com sucesso.");
@@ -100,24 +100,24 @@ export default function InboxModal({ visible, onClose, characters, onUpdate }: I
     };
 
     const handleReject = async (campaignId: string) => {
-        const user = auth().currentUser;
+        const user = auth.currentUser;
         if (!user) return;
         try {
             // Remove o jogador da lista da mesa, assim o mestre saberá que ele não está mais e poderá re-convidar
-            const campaignRef = firestore().collection('campaigns').doc(campaignId);
-            const campaignDoc = await campaignRef.get();
+            const campaignRef = doc(db, 'campaigns', campaignId);
+            const campaignDoc = await getDoc(campaignRef);
             
             if (campaignDoc.exists()) {
                 const campaignData = campaignDoc.data();
                 const playerToRemove = (campaignData?.players || []).find((p: any) => p.id === user.uid || p.uid === user.uid);
                 
                 const updates: any = {
-                    playerIds: firestore.FieldValue.arrayRemove(user.uid)
+                    playerIds: arrayRemove(user.uid)
                 };
                 if (playerToRemove) {
-                    updates.players = firestore.FieldValue.arrayRemove(playerToRemove);
+                    updates.players = arrayRemove(playerToRemove);
                 }
-                await campaignRef.update(updates);
+                await updateDoc(campaignRef, updates);
             }
             fetchInvitations(); // Atualiza a lista
         } catch (error: any) {

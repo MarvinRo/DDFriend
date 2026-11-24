@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import auth from '@react-native-firebase/auth';
+import { onAuthStateChanged } from '@react-native-firebase/auth';
+import { auth } from '@/lib/firebase';
 import { View, ActivityIndicator } from 'react-native';
 
 import LoginPage from '@/screens/auth/LoginPage';
@@ -24,7 +25,7 @@ const Routes = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const subscriber = auth().onAuthStateChanged(userState => {
+    const subscriber = onAuthStateChanged(auth, userState => {
       setUser(userState);
       if (isLoading) setIsLoading(false);
     });

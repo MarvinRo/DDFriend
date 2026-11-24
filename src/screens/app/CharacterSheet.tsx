@@ -1,11 +1,12 @@
 import ExitButton from '@/components/ExitButton';
 import { Progress } from '@/components/ui/Progress';
 import { useNavigation } from "@react-navigation/native";
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, ScrollView, Image, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
-import firestore from '@react-native-firebase/firestore';
+import { doc, updateDoc, onSnapshot } from '@react-native-firebase/firestore';
+import { db } from '@/lib/firebase';
 
 
 
@@ -55,23 +56,46 @@ export default function CharacterSheet({ route }: any) {
 
 
     const navigation = useNavigation<any>();
-    // Pega os dados do personagem passados pela navegação
-    const character = route?.params?.character || {};
+    // Dados passados pela navegação servem só até a primeira leitura do Firestore
+    const routeCharacter = route?.params?.character || {};
     const isFromMaster = route?.params?.fromMaster;
     const campaign = route?.params?.campaign;
-    const armor = route;
+
+    // Ficha em tempo real: edições (nível, XP, CA da bolsa, vida pelo outro aparelho) aparecem na hora
+    const [liveCharacter, setLiveCharacter] = useState<any>(null);
+    useEffect(() => {
+        if (!routeCharacter.id) return;
+        const unsubscribe = onSnapshot(
+            doc(db, 'characterSheets', routeCharacter.id),
+            (snapshot) => {
+                if (snapshot?.exists()) setLiveCharacter({ ...snapshot.data(), id: snapshot.id });
+            },
+            (error) => console.error("Erro ao acompanhar a ficha:", error)
+        );
+        return () => unsubscribe();
+    }, [routeCharacter.id]);
+
+    const character = liveCharacter && liveCharacter.id === routeCharacter.id ? liveCharacter : routeCharacter;
+    const lifeFromSheet = character.currentLife !== undefined ? character.currentLife : (character.life || 0);
 
     // Estado local para a Vida Temporária/Atual (inicia com o valor salvo na ficha)
-    const [currentLifeStr, setCurrentLifeStr] = useState(String(character.currentLife !== undefined ? character.currentLife : (character.life || 0)));
+    const [currentLifeStr, setCurrentLifeStr] = useState(String(lifeFromSheet));
     const currentLife = parseInt(currentLifeStr, 10) || 0;
     const lifeInputRef = useRef<TextInput>(null);
+
+    // Acompanha a vida salva, sem atrapalhar enquanto o jogador digita
+    useEffect(() => {
+        if (!lifeInputRef.current?.isFocused()) {
+            setCurrentLifeStr(String(lifeFromSheet));
+        }
+    }, [lifeFromSheet]);
 
     // Função que salva a vida em tempo real no banco para espelhar na mesa do Mestre
     const handleUpdateLife = async (newLife: number) => {
         setCurrentLifeStr(String(newLife));
         if (character.id) {
             try {
-                await firestore().collection('characterSheets').doc(character.id).update({ currentLife: newLife });
+                await updateDoc(doc(db, 'characterSheets', character.id), { currentLife: newLife });
             } catch (error) {
                 console.error("Erro ao atualizar vida no Firebase:", error);
             }

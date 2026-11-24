@@ -195,13 +195,16 @@ export default function MasterCampaignView({ route }: any) {
 
             const normalizedSearch = normalize(searchBestiary);
             
-            const combinedResults = allMons.filter((m: { name: string; description: string; photoUrl: any; }) => {
+            const combinedResults = allMons.filter((m: { name: string; description: string; photoUrl: any; apiIndex?: string | null; }) => {
                 const normalizedName = normalize(m.name);
                 const normalizedDesc = normalize(m.description);
-                const url = (m.photoUrl || '').toLowerCase();
-                
-                // Busca no nome traduzido, na descrição e na URL da foto (que tem o nome original em inglês)
-                return normalizedName.includes(normalizedSearch) || 
+                const normalizedApiIndex = normalize(m.apiIndex || '');
+                // Monstros antigos (sem apiIndex) ainda podem ser achados pelo nome em inglês na URL da foto
+                const url = m.photoUrl && !m.photoUrl.startsWith('data:') ? normalize(m.photoUrl) : '';
+
+                // Busca no nome traduzido, no nome original em inglês (apiIndex) e na descrição
+                return normalizedName.includes(normalizedSearch) ||
+                       (normalizedApiIndex !== '' && normalizedApiIndex.includes(normalizedSearch)) ||
                        url.includes(normalizedSearch) ||
                        normalizedDesc.includes(normalizedSearch);
             });
@@ -559,12 +562,17 @@ export default function MasterCampaignView({ route }: any) {
                                                     />
                                                 ) : (
                                                     <View style={{ width: 60, height: 60, borderRadius: 30, borderWidth: 1, borderColor: '#C49A4A', backgroundColor: '#1E293B', alignItems: 'center', justifyContent: 'center' }}>
-                                                        {(monster.name || 'M').charAt(0).toUpperCase()}
+                                                        <Text className="text-gold font-bold text-xl">{(monster.name || 'M').charAt(0).toUpperCase()}</Text>
                                                     </View>
                                                 )}
                                                 <View className="ml-3 flex-1">
                                                     <Text className="text-gold font-bold text-lg" numberOfLines={1}>{monster.name}</Text>
-                                                    <Text className="text-textColor-secondary text-xs">HP: {monster.hp} | CA: {monster.ac}</Text>
+                                                    <Text className="text-textColor-secondary text-xs">
+                                                        HP: {monster.hp} | CA: {monster.ac}
+                                                        {monster.challengeRating !== undefined && monster.challengeRating !== null
+                                                            ? ` | ND: ${({ 0.125: '1/8', 0.25: '1/4', 0.5: '1/2' } as Record<number, string>)[monster.challengeRating] ?? monster.challengeRating}`
+                                                            : ''}
+                                                    </Text>
                                                     <Text className="text-textColor-secondary text-[10px] mt-1" numberOfLines={2}>{monster.description}</Text>
                                                 </View>
                                             </View>

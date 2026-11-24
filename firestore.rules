@@ -1,0 +1,159 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function campaignDoc(campaignId) {
+      return get(/databases/$(database)/documents/campaigns/$(campaignId));
+    }
+
+    // Usuário logado é o Mestre da campanha
+    function isMasterOfCampaign(campaignId) {
+      return exists(/databases/$(database)/documents/campaigns/$(campaignId)) &&
+             campaignDoc(campaignId).data.masterId == request.auth.uid;
+    }
+
+    // Usuário logado foi convidado para a campanha (está em playerIds)
+    function isInvitedTo(campaignId) {
+      return exists(/databases/$(database)/documents/campaigns/$(campaignId)) &&
+             request.auth.uid in campaignDoc(campaignId).data.playerIds;
+    }
+
+    // ---------------------------------------------------------------- users
+    match /users/{userId} {
+      // Cada um lê o próprio perfil
+      allow get: if signedIn() && request.auth.uid == userId;
+
+      // Busca de jogadores por e-mail (CreateTable) — só consultas pequenas,
+      // para dificultar baixar a coleção inteira. Não depende de isMaster,
+      // que é gravado pelo próprio cliente e não serve como permissão.
+      allow list: if signedIn() && request.query.limit <= 5;
+
+      // Só é possível criar/editar/apagar o próprio documento
+      allow create, update: if signedIn() && request.auth.uid == userId;
+      allow delete: if signedIn() && request.auth.uid == userId;
+    }
+
+    // ------------------------------------------------------ characterSheets
+    match /characterSheets/{sheetId} {
+
+      // O campaignId gravado é válido se: vazio, igual ao anterior,
+      // ou uma mesa para a qual o dono foi convidado.
+      function campaignIdOk(previousCampaignId) {
+        let c = request.resource.data.get('campaignId', null);
+        return c == null || c == '' || c == previousCampaignId || isInvitedTo(c);
+      }
+
+      function sheetMasterCanRead() {
+        // Mesma forma da regra original, para a query do Mestre
+        // (where campaignId == X) continuar sendo aceita.
+        return ('campaignId' in resource.data) &&
+               isMasterOfCampaign(resource.data.campaignId);
+      }
+
+      allow create: if signedIn() &&
+        request.auth.uid == request.resource.data.ownerId &&
+        campaignIdOk(null);
+
+      allow read: if signedIn() && (
+        request.auth.uid == resource.data.ownerId || sheetMasterCanRead()
+      );
+
+      allow update: if signedIn() && (
+        // Dono: edita tudo, menos o ownerId, e só entra em mesa se foi convidado
+        (
+          request.auth.uid == resource.data.ownerId &&
+          request.resource.data.ownerId == resource.data.ownerId &&
+          campaignIdOk(resource.data.get('campaignId', null))
+        ) ||
+        // Mestre da mesa: só pode desvincular a ficha (expulsar)
+        (
+          sheetMasterCanRead() &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['campaignId']) &&
+          (request.resource.data.campaignId == '' || request.resource.data.campaignId == null)
+        )
+      );
+
+      allow delete: if signedIn() && request.auth.uid == resource.data.ownerId;
+
+      function sheet() {
+        return get(/databases/$(database)/documents/characterSheets/$(sheetId)).data;
+      }
+
+      function canReadSheetChildren() {
+        return request.auth.uid == sheet().ownerId || (
+          ('campaignId' in sheet()) &&
+          sheet().campaignId is string &&
+          sheet().campaignId != '' &&
+          isMasterOfCampaign(sheet().campaignId)
+        );
+      }
+
+      match /bagpack/{bagpackId} {
+        allow read: if signedIn() && canReadSheetChildren();
+        allow write: if signedIn() && request.auth.uid == sheet().ownerId;
+      }
+
+      match /spellsAndAbilities/{magicId} {
+        allow read: if signedIn() && canReadSheetChildren();
+        allow write: if signedIn() && request.auth.uid == sheet().ownerId;
+      }
+    }
+
+    // ------------------------------------------------------------ campaigns
+    match /campaigns/{campaignId} {
+
+      // Jogador só pode se remover da mesa (recusar convite / trocar de mesa)
+      function isLeavingOnly() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['playerIds', 'players']) &&
+               request.resource.data.playerIds == resource.data.playerIds.removeAll([request.auth.uid]) &&
+               request.resource.data.get('players', []).size() <= resource.data.get('players', []).size();
+      }
+
+      // Só o Mestre e os convidados veem a mesa
+      allow read: if signedIn() && (
+        request.auth.uid == resource.data.masterId ||
+        request.auth.uid in resource.data.playerIds
+      );
+
+      // Quem cria a mesa é o Mestre dela
+      allow create: if signedIn() && request.resource.data.masterId == request.auth.uid;
+
+      allow update: if signedIn() && (
+        // Mestre: edita tudo, mas não transfere a mesa
+        (
+          request.auth.uid == resource.data.masterId &&
+          request.resource.data.masterId == resource.data.masterId
+        ) ||
+        // Jogador convidado: só pode sair
+        (
+          request.auth.uid in resource.data.playerIds && isLeavingOnly()
+        )
+      );
+
+      allow delete: if signedIn() && request.auth.uid == resource.data.masterId;
+
+      // Monstros instanciados dentro da mesa
+      match /monsters/{monsterId} {
+        allow read: if signedIn() && (isMasterOfCampaign(campaignId) || isInvitedTo(campaignId));
+        // Apenas o Mestre adiciona, altera a vida ou remove monstros do combate
+        allow write: if signedIn() && isMasterOfCampaign(campaignId);
+      }
+    }
+
+    // ------------------------------------------------------ Bestiário Global
+    match /monsters/{globalMonsterId} {
+      allow read: if signedIn();
+      // Quem registra o monstro é o dono dele
+      allow create: if signedIn() && request.resource.data.masterId == request.auth.uid;
+      // Só o criador edita ou apaga, e não pode transferir a autoria
+      allow update: if signedIn() &&
+        request.auth.uid == resource.data.masterId &&
+        request.resource.data.masterId == resource.data.masterId;
+      allow delete: if signedIn() && request.auth.uid == resource.data.masterId;
+    }
+  }
+}

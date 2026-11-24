@@ -8,8 +8,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import CreateTable from "@/components/CreateTable";
 import CreateMonster from "@/components/CreateMonster";
-import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import { collection, query, where, limit, getDocs, onSnapshot, doc, updateDoc, addDoc, deleteDoc, serverTimestamp } from '@react-native-firebase/firestore';
+import { auth, db, docsWithId } from '@/lib/firebase';
 import { useNavigation } from "@react-navigation/native";
 
 
@@ -29,49 +29,35 @@ export default function HomeMaster({ onPressLevel }: any) {
     const [editingMonster, setEditingMonster] = useState<any>(null);
     const navigation = useNavigation<any>();
 
+    // Escuta em tempo real as mesas do mestre: criar, editar, excluir ou um jogador sair
+    // atualiza a lista na hora, sem precisar reabrir o app
     useEffect(() => {
-        loadCampaigns();
-    }, []);
-
-    const loadCampaigns = async () => {
-        const user = auth().currentUser;
+        const user = auth.currentUser;
         if (!user) return;
 
-        // Busca na nova coleção "campaigns" onde o mestre atual é o dono
-        const query = firestore().collection('campaigns').where('masterId', '==', user.uid);
-
-        try {
-            const snapshotCache = await query.get({ source: 'cache' });
-            if (!snapshotCache.empty) {
-                setCampaigns(snapshotCache.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-                return;
-            }
-        } catch (e) {
-            console.log("Cache vazio, buscando do servidor...");
-        }
-
-        try {
-            const snapshotServer = await query.get({ source: 'server' });
-            setCampaigns(snapshotServer.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        } catch (error) {
-            console.error("Erro ao carregar campanhas:", error);
-        }
-    };
+        const campaignsQuery = query(collection(db, 'campaigns'), where('masterId', '==', user.uid));
+        const unsubscribe = onSnapshot(
+            campaignsQuery,
+            (snapshot) => setCampaigns(docsWithId(snapshot)),
+            (error) => console.error("Erro ao carregar campanhas:", error)
+        );
+        return () => unsubscribe();
+    }, []);
 
     const handleSaveCampaign = async (campaignData: any) => {
-        const user = auth().currentUser;
+        const user = auth.currentUser;
         if (!user) return;
 
         try {
             if (editingCampaign) {
-                await firestore().collection('campaigns').doc(editingCampaign.id).update({
+                await updateDoc(doc(db, 'campaigns', editingCampaign.id), {
                     ...campaignData,
                 });
             } else {
-                await firestore().collection('campaigns').add({
+                await addDoc(collection(db, 'campaigns'), {
                     ...campaignData,
                     masterId: user.uid,
-                    createdAt: firestore.FieldValue.serverTimestamp(),
+                    createdAt: serverTimestamp(),
                 });
             }
         } catch (error) {
@@ -90,7 +76,7 @@ export default function HomeMaster({ onPressLevel }: any) {
                     style: "destructive",
                     onPress: async () => {
                         try {
-                            await firestore().collection('campaigns').doc(id).delete();
+                            await deleteDoc(doc(db, 'campaigns', id));
                         } catch (error) {
                             console.error("Erro ao excluir campanha:", error);
                         }
@@ -101,17 +87,21 @@ export default function HomeMaster({ onPressLevel }: any) {
     };
 
     const handleSaveMonster = async (monsterData: any) => {
-        const user = auth().currentUser;
+        const user = auth.currentUser;
         if (!user) return;
 
         try {
             if (editingMonster) {
-                await firestore().collection('monsters').doc(editingMonster.id).update({
+                await updateDoc(doc(db, 'monsters', editingMonster.id), {
                     ...monsterData,
                 });
             } else {
                 // Verifica se já existe um monstro com esse nome exato no Bestiário Global
-                const checkDuplicate = await firestore().collection('monsters').where('name', '==', monsterData.name).get();
+                // Monstros importados da API são comparados pelo apiIndex (estável, em inglês),
+                // os criados à mão pelo nome
+                const checkDuplicate = monsterData.apiIndex
+                    ? await getDocs(query(collection(db, 'monsters'), where('apiIndex', '==', monsterData.apiIndex), limit(1)))
+                    : await getDocs(query(collection(db, 'monsters'), where('name', '==', monsterData.name), limit(1)));
                 
                 if (!checkDuplicate.empty) {
                     Alert.alert(
@@ -121,10 +111,10 @@ export default function HomeMaster({ onPressLevel }: any) {
                     return; // Interrompe o salvamento
                 }
 
-                await firestore().collection('monsters').add({
+                await addDoc(collection(db, 'monsters'), {
                     ...monsterData,
                     masterId: user.uid,
-                    createdAt: firestore.FieldValue.serverTimestamp(),
+                    createdAt: serverTimestamp(),
                 });
             }
             Alert.alert("Sucesso", "Monstro adicionado ao Bestiário Global!");

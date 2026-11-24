@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Modal, Pressable, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import { Input } from '@/components/ui/Input';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import firestore from '@react-native-firebase/firestore';
+import { collection, query, where, limit, getDocs } from '@react-native-firebase/firestore';
+import { db, docsWithId } from '@/lib/firebase';
 
 interface CreateTableProps {
     visible: boolean;
@@ -39,14 +40,14 @@ export default function CreateTable({ onClose, onSave, initialData, visible }: C
             if (searchEmail && searchEmail.length >= 3) {
                 try {
                     // Busca na coleção users onde o e-mail "começa com" o texto digitado
-                    const snapshot = await firestore()
-                        .collection('users')
-                        .where('email', '>=', searchEmail.toLowerCase())
-                        .where('email', '<=', searchEmail.toLowerCase() + '\uf8ff')
-                        .limit(5)
-                        .get();
+                    const snapshot = await getDocs(query(
+                        collection(db, 'users'),
+                        where('email', '>=', searchEmail.toLowerCase()),
+                        where('email', '<=', searchEmail.toLowerCase() + '\uf8ff'),
+                        limit(5)
+                    ));
                     
-                    const results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    const results = docsWithId(snapshot);
                     setSearchResults(results);
                 } catch (error) {
                     console.error("Erro ao buscar usuários:", error);
